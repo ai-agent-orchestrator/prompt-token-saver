@@ -117,3 +117,65 @@ def test_run_explicit_local_models_with_injected_http(tmp_path, monkeypatch):
     assert report["items"][0]["summary"]["method"] == "model"
     assert report["items"][0]["decision"] == "pass"
     assert [url.rsplit("/", 1)[-1] for url in calls] == ["embed", "generate"]
+
+
+def test_run_board_and_standalone_board(tmp_path, capsys):
+    import json
+
+    source = tmp_path / "synthetic.txt"
+    source.write_text("synthetic robots record 42 samples.", encoding="utf-8")
+    output = tmp_path / "result"
+    assert main(["run", str(source), "--out", str(output), "--board"]) == 0
+    board = (output / "board.html").read_text(encoding="utf-8")
+    report = json.loads((output / "report.json").read_text(encoding="utf-8"))
+    item, = report["items"]
+    assert item["source_chunks"][0]["text"] == source.read_text(encoding="utf-8")
+    assert any(anchor["text"] == "42" for anchor in item["anchors"])
+    assert 'class="retained"' in board
+    another = tmp_path / "review" / "index.html"
+    assert main(["board", str(output / "report.json"), "--out", str(another)]) == 0
+    assert another.read_text(encoding="utf-8") == board
+    assert str(another) in capsys.readouterr().out
+
+
+def test_board_default_output_and_open(tmp_path, monkeypatch):
+    from prompt_token_saver import cli
+
+    source = tmp_path / "synthetic.txt"
+    source.write_text("synthetic robots record 42 samples.", encoding="utf-8")
+    assert main(["run", str(source), "--out", str(tmp_path)]) == 0
+    assert not (tmp_path / "board.html").exists()
+    monkeypatch.chdir(tmp_path)
+    opened = []
+    monkeypatch.setattr(cli.webbrowser, "open", opened.append)
+    assert main(["board", str(tmp_path / "report.json"), "--open"]) == 0
+    assert (tmp_path / "board.html").is_file()
+    assert opened == [(tmp_path / "board.html").as_uri()]
+
+
+@pytest.mark.parametrize("content", [None, "invalid", "[]", '{"items": [{}]}'])
+def test_board_invalid_input(tmp_path, content, capsys):
+    report = tmp_path / "report.json"
+    if content is not None:
+        report.write_text(content, encoding="utf-8")
+    output = tmp_path / "board.html"
+    assert main(["board", str(report), "--out", str(output)]) == 2
+    assert "pts board:" in capsys.readouterr().out
+    assert not output.exists()
+
+
+def test_board_keeps_actual_scorer_output_without_rescoring(tmp_path, monkeypatch):
+    from prompt_token_saver.surprise import IdfScorer
+
+    calls = []
+    score = IdfScorer.score
+
+    def record(self, text):
+        calls.append(text)
+        return score(self, text)
+
+    monkeypatch.setattr(IdfScorer, "score", record)
+    source = tmp_path / "synthetic.txt"
+    source.write_text("synthetic robots record 42 samples.", encoding="utf-8")
+    assert main(["run", str(source), "--out", str(tmp_path), "--board"]) == 0
+    assert calls == [source.read_text(encoding="utf-8")]
