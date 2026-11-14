@@ -6,6 +6,7 @@
 [English](README.md)
 
 ![prompt-token-saver](assets/hero.png)
+<sub>그림의 숫자는 예시입니다. 실측 결과는 첫 릴리스와 함께 공개합니다.</sub>
 
 > 🚧 **공개 개발 중.** 첫 릴리스가 곧 나옵니다. Star나 Watch로 받아 보세요.
 

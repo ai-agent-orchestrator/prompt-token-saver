@@ -6,6 +6,7 @@ Free. Local. Ten minutes to try.
 [한국어](README.ko.md)
 
 ![prompt-token-saver](assets/hero.png)
+<sub>Numbers in the diagram are an illustration. Measured results ship with the first release.</sub>
 
 > 🚧 **Building in public.** First release coming soon. Star or watch to get it.
 

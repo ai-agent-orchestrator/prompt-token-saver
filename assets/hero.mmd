@@ -5,14 +5,14 @@ flowchart LR
   classDef result fill:#1a2837,stroke:#78d5ef,stroke-width:3px,color:#e6edf6
   classDef stop fill:#40282d,stroke:#c58b92,color:#e6edf6
   classDef strategy fill:#173b3e,stroke:#66cfc8,color:#e6edf6
-  IN["📚 Long notes<br/>piling up every day"]:::engineering --> SUM["🧠 Free local model<br/>summarizes by topic"]:::worker
+  IN["📚 Long notes<br/>e.g. 12,000 tokens"]:::engineering --> SUM["🧠 Free local model<br/>summarizes by topic"]:::worker
   subgraph CHECK["TWO CHECKS, IN PARALLEL"]
     direction TB
     A["🔎 Meaning<br/>is every sentence grounded?"]:::guard
     B["🎯 Surprise<br/>are the numbers & names still there?"]:::guard
   end
   SUM --> CHECK
-  CHECK -->|pass| OUT["✅ Short prompt<br/>numbers and names kept"]:::result
+  CHECK -->|pass| OUT["✅ Short prompt<br/>e.g. 1,500 tokens · facts kept"]:::result
   CHECK -->|fail| FB["↩ Fall back to<br/>original sentences"]:::stop --> OUT
   OUT --> AI["💬 Your paid AI"]:::strategy
   style CHECK fill:#141f2c,stroke:#455f79,stroke-width:1.5px,color:#c9d8eb
