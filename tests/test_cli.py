@@ -17,8 +17,29 @@ def test_help(argv, capsys):
 
 
 @pytest.mark.parametrize("command", ["run", "demo", "board"])
-def test_unimplemented(command, capsys, tmp_path, monkeypatch):
+def test_bare_command(command, capsys, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
+    if command == "demo":
+        import json
+
+        assert main([command]) == 0
+        report_path = tmp_path / "pts-demo" / "report.json"
+        board_path = tmp_path / "pts-demo" / "board.html"
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        first = report["items"][0]
+        assert first["decision"] == "fallback"
+        assert first["demo_arm"] == "TruncatingFakeSummarizer"
+        assert any(check["name"] == "anchor" and not check["passed"]
+                   for check in first["checks"])
+        assert first["final_text"] == "\n\n".join(
+            chunk["text"] for chunk in first["source_chunks"])
+        assert '<article id="item-0" class="card fallback">' in board_path.read_text(
+            encoding="utf-8")
+        output = capsys.readouterr().out
+        assert str(report_path.relative_to(tmp_path)) in output
+        assert str(board_path.relative_to(tmp_path)) in output
+        assert "B FAIL -> fallback" in output
+        return
     assert main([command]) == 2
     assert "아직 없음" in capsys.readouterr().out
 
