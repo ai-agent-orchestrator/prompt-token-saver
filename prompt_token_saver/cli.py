@@ -98,7 +98,10 @@ def main(argv: list[str] | None = None) -> int:
     run_parser.add_argument("--scorer", default="idf")
     run_parser.add_argument("--weight", type=float, default=0.5)
     run_parser.add_argument("--board", action="store_true", help="Generate board.html")
-    commands.add_parser("demo", help="아직 없음")
+    demo_parser = commands.add_parser("demo", help="Compare built-in synthetic notes offline")
+    demo_parser.add_argument("--out", default="pts-demo")
+    demo_parser.add_argument("--open", action="store_true", help="Open board.html in a browser")
+    demo_parser.add_argument("--model", help="Also try an installed local Ollama model")
     board_parser = commands.add_parser("board", help="Review a JSON report offline")
     board_parser.add_argument("report", nargs="?")
     board_parser.add_argument("--out", default="board.html")
@@ -107,6 +110,26 @@ def main(argv: list[str] | None = None) -> int:
         args = parser.parse_args(argv)
     except SystemExit as exc:
         return int(exc.code)
+    if args.command == "demo":
+        from .demo import create_demo
+
+        try:
+            report_path, board_path, model_failed = create_demo(
+                args.out, summarizer=OllamaSummarizer(args.model)
+                if args.model is not None else None)
+            print(report_path)
+            print(board_path)
+            print("TruncatingFakeSummarizer: B FAIL -> fallback (full source); "
+                  "ExtractiveSummarizer: comparison")
+            if model_failed:
+                print("Local Ollama model unavailable; offline comparison is ready. "
+                      "Start Ollama and install the selected model to add model results.")
+            if args.open:
+                webbrowser.open(board_path.resolve().as_uri())
+            return 0
+        except (OSError, ValueError, RuntimeError, ImportError) as exc:
+            print(f"pts demo: {exc}")
+            return 2
     if args.command == "board" and args.report:
         try:
             render(args.report, args.out)

@@ -17,7 +17,8 @@ def test_help(argv, capsys):
 
 
 @pytest.mark.parametrize("command", ["run", "demo", "board"])
-def test_unimplemented(command, capsys):
+def test_unimplemented(command, capsys, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     assert main([command]) == 2
     assert "아직 없음" in capsys.readouterr().out
 
@@ -179,3 +180,80 @@ def test_board_keeps_actual_scorer_output_without_rescoring(tmp_path, monkeypatc
     source.write_text("synthetic robots record 42 samples.", encoding="utf-8")
     assert main(["run", str(source), "--out", str(tmp_path), "--board"]) == 0
     assert calls == [source.read_text(encoding="utf-8")]
+
+
+def test_demo_default_output_and_open(tmp_path, monkeypatch, capsys):
+    from prompt_token_saver import cli
+    from prompt_token_saver.embed import _UrllibHTTP
+
+    def blocked(*args, **kwargs):
+        pytest.fail("Default demo must not contact a model")
+
+    monkeypatch.setattr(_UrllibHTTP, "post", blocked)
+    monkeypatch.chdir(tmp_path)
+    opened = []
+    monkeypatch.setattr(cli.webbrowser, "open", opened.append)
+    assert main(["demo", "--open"]) == 0
+    assert (tmp_path / "pts-demo" / "report.json").is_file()
+    board = tmp_path / "pts-demo" / "board.html"
+    assert board.is_file()
+    assert opened == [board.as_uri()]
+    output = capsys.readouterr().out
+    assert "report.json" in output and "board.html" in output
+    assert "B FAIL -> fallback" in output
+
+
+def test_demo_explicit_output_without_open(tmp_path, monkeypatch):
+    from prompt_token_saver import cli
+
+    def blocked(*args, **kwargs):
+        pytest.fail("Browser must open only with --open")
+
+    monkeypatch.setattr(cli.webbrowser, "open", blocked)
+    assert main(["demo", "--out", str(tmp_path / "custom")]) == 0
+    assert (tmp_path / "custom" / "board.html").is_file()
+
+
+def test_demo_output_failure(tmp_path, capsys):
+    target = tmp_path / "occupied"
+    target.write_text("keep", encoding="utf-8")
+    assert main(["demo", "--out", str(target)]) == 2
+    assert "pts demo:" in capsys.readouterr().out
+
+
+def test_demo_unavailable_local_model(tmp_path, monkeypatch, capsys):
+    from prompt_token_saver import cli
+    from prompt_token_saver.summarize import OllamaSummarizer
+
+    class LocalHTTP:
+        def post(self, url, json):
+            raise OSError("Local service absent")
+
+    monkeypatch.setattr(cli, "OllamaSummarizer",
+                        lambda model: OllamaSummarizer(model, http=LocalHTTP()))
+    assert main(["demo", "--model", "qwen3:1.7b", "--out", str(tmp_path)]) == 0
+    assert "Local Ollama model unavailable" in capsys.readouterr().out
+    assert (tmp_path / "board.html").is_file()
+
+
+def test_demo_empty_model(tmp_path):
+    assert main(["demo", "--model", "", "--out", str(tmp_path)]) == 2
+    assert not (tmp_path / "report.json").exists()
+
+
+def test_quickstart_commands_match_help(capsys):
+    from pathlib import Path
+    import re
+
+    quickstart = (Path(__file__).resolve().parents[1] / "docs" / "QUICKSTART.md").read_text(
+        encoding="utf-8")
+    commands = re.findall(r"^pts (\w+)(.*)$", quickstart, re.MULTILINE)
+    assert commands
+    assert main(["--help"]) == 0
+    root_help = capsys.readouterr().out
+    for command, arguments in commands:
+        assert command in root_help
+        assert main([command, "--help"]) == 0
+        help_text = capsys.readouterr().out
+        for option in re.findall(r"--[\w-]+", arguments):
+            assert option in help_text
