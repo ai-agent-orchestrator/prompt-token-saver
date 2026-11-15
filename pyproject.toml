@@ -20,3 +20,6 @@ pts = "prompt_token_saver.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["prompt_token_saver*"]
+
+[tool.setuptools.package-data]
+prompt_token_saver = ["demo/*.md"]
