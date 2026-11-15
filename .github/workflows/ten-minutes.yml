@@ -1,0 +1,57 @@
+name: ten-minutes
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  offline-demo:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install, test, and demo within 600 seconds
+        shell: python
+        run: |
+          import os
+          import subprocess
+          import sys
+          import time
+
+          start = time.monotonic()
+          commands = [
+              [sys.executable, '-m', 'pip', 'install', '-e', '.[test]'],
+              [sys.executable, '-m', 'pytest', '-q'],
+              ['pts', 'demo'],
+          ]
+          for index, command in enumerate(commands):
+              remaining = 600 - (time.monotonic() - start)
+              if remaining <= 0:
+                  raise SystemExit('Installation through demo exceeded 600 seconds')
+              env = os.environ.copy()
+              if index:
+                  # Allow pip networking only; block sockets in pytest and demo.
+                  code = (
+                      'import runpy, socket, sys; '
+                      'socket.socket.connect = lambda *a, **k: '
+                      '(_ for _ in ()).throw(RuntimeError("Offline CI")); '
+                      'socket.socket.connect_ex = socket.socket.connect; '
+                  )
+                  if index == 1:
+                      command = [sys.executable, '-c', code +
+                                 'sys.argv = ["pytest", "-q"]; '
+                                 'runpy.run_module("pytest", run_name="__main__")']
+                  else:
+                      command = [sys.executable, '-c', code +
+                                 'sys.argv = ["pts", "demo"]; '
+                                 'runpy.run_module("prompt_token_saver.cli", run_name="__main__")']
+              subprocess.run(command, check=True, timeout=remaining, env=env)
+          elapsed = time.monotonic() - start
+          print(f'Installation through demo: {elapsed:.2f} seconds')
+          if elapsed > 600:
+              raise SystemExit('Installation through demo exceeded 600 seconds')
