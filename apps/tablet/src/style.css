@@ -136,3 +136,9 @@ h2 { font-size: 16px; }
 .privacy-terms input { width: 100%; }
 .copy-fallback { width: 100%; min-height: 110px; margin-bottom: 14px; padding: 14px; background: #102338; color: #edf7ff; border: 1px solid var(--accent); font-size: 16px; }
 @media (max-width:760px) { .privacy-panel { padding: 14px 16px; } .privacy-switch { font-size: 16px; } .privacy-description { margin-left: 0; } }
+
+.lumi-link { display: inline-flex; align-items: center; gap: 7px; vertical-align: middle; margin-left: 14px; text-decoration: none; }
+.lumi-link .lumi { margin: 0; width: 64px; height: 72px; }
+h1 .lumi-link-label { display: block; max-width: 125px; color: #d2bee9; font-size: 12px; font-weight: 500; line-height: 1.5; letter-spacing: 0; }
+.lumi-link:hover .lumi-link-label { color: #ffe587; text-decoration: underline; }
+@media (max-width:760px) { .lumi-link { margin-left: 8px; gap: 4px; } .lumi-link .lumi { width: 52px; height: 59px; } h1 .lumi-link-label { max-width: 105px; font-size: 11px; } }
