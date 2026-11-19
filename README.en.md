@@ -4,6 +4,18 @@
 
 [한국어](README.ko.md) · [English](README.en.md)
 
+**[Open the public Mobile / Tablet Beta](https://ai-agent-orchestrator.github.io/prompt-token-saver/)**
+
+Open this address on your phone or tablet. No development environment or source download is needed. Use it in the browser, or add it to the home screen as an app.
+
+### Add it to the home screen
+
+- **Android phone/tablet:** open in Chrome → browser menu → **Install app** or **Add to Home screen**.
+- **iPhone/iPad:** open in Safari → **Share** → **Add to Home Screen**. Enable “Open as Web App” if offered.
+- Launch **token saver** from the home screen. An app-store download or APK is not required.
+
+Google login is optional for paste → Summary 1 → Summary 2 → copy. Initial loading and Drive operations need internet. Actual device installation and offline use remain Beta verification items. See the [PWA installability guide](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable).
+
 ## Layer 1: ultralight edge — free and serverless
 
 | Item | Product direction |
@@ -69,7 +81,7 @@ The target is approximately 5–10 reference pages from 30–40 pages of initial
 
 This is a **testable Beta**, not a release with completed device/model/Drive validation.
 
-The 2026-11-19 no-Drive browser check processed **52,593 → 8,202 → 7,377 characters**, retained the final condition, and confirmed that clipboard text matched the visible result. The page had no horizontal overflow at 1024px tablet and 390px mobile widths. Automated checks: **68 tests and a production build passed**. These results are not real tablet GPU benchmarks.
+The 2026-11-19 no-Drive browser check processed **52,593 → 8,202 → 7,377 characters** and retained the final condition. Copying and actually pasting the result back on the public HTTPS site confirmed matching text. There was no horizontal overflow at 1024px tablet and 390px mobile widths; mobile input text is 16px. After PWA updates, **70 tests and a production build passed**. These results do not verify installation on a real device or tablet GPU performance.
 
 Start with synthetic or public material. Follow the [Beta start and check record](docs/BETA_CHECKLIST.md): test the no-Drive path first, then add real-account Drive checks after operator configuration. Real device GPU performance, Google account integration, and the deployed Pages URL remain separate verification items.
 
@@ -84,14 +96,14 @@ npm ci
 npm run dev
 ```
 
-Open the printed Local URL on that computer and try the Example button without Google configuration. A tablet elsewhere needs the HTTPS address of a deployed static site; pushing source alone does not deploy it.
+The printed Local URL is for the development computer. Regular mobile and tablet users should open the public Beta link above; Google configuration is not required for the Example flow.
 
 ```sh
 npm run check
 npm run build
 ```
 
-`dist/` contains the static output. The included [Pages workflow](.github/workflows/tablet-pages.yml) runs only by manual dispatch. App visitors do not need Node.js or a development server.
+`dist/` contains the static output. The live Beta is published from the root of `claude/tablet-beta-pages`; its source is kept separately on `claude/tablet-token-saver-2026-11-19`. The included [manual Pages workflow](.github/workflows/tablet-pages.yml) is an alternative for a future switch to Actions-based publishing, not the current active deployment path. App visitors do not need Node.js or a development server.
 
 - [App setup, Google configuration, and deployment](apps/tablet/README.md)
 - [Dark-mode Tablet / Mobile Beta development plan](docs/TABLET_MOBILE_BETA_PLAN.md)

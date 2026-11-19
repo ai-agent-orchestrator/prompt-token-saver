@@ -4,6 +4,10 @@
 
 ## 1. 시작
 
+**휴대폰·태블릿:** https://ai-agent-orchestrator.github.io/prompt-token-saver/ 를 연다. Google 연결이나 앱 설치 없이 예제로 시작할 수 있다. 앱처럼 쓰려면 Android Chrome 메뉴의 ‘앱 설치/홈 화면에 추가’, iPhone·iPad Safari 공유 메뉴의 ‘홈 화면에 추가’를 사용한다.
+
+다음 명령은 일반 이용자에게 필요하지 않고 개발 PC에서 코드를 수정할 때만 사용한다.
+
 개발 PC에 Node.js 24가 있는 경우:
 
 ```sh
@@ -13,7 +17,7 @@ npm ci
 npm run dev
 ```
 
-터미널의 Local 주소를 개발 PC 브라우저에서 연다. 이번 Beta 브랜치는 소스이며, 실제 HTTPS 배포 URL이 생기기 전에는 다른 기기의 `localhost`에서 이 PC의 앱이 열리지 않는다. 태블릿·모바일 원격 사용은 README의 Pages 배포 후 같은 HTTPS 주소로 검수한다.
+터미널의 Local 주소는 개발 PC 브라우저용이다. 다른 기기는 위 공개 HTTPS 주소를 사용한다. 현재 Pages source는 `claude/tablet-beta-pages` 루트이며 앱 코드와 모델 가중치·개인 자료를 섞지 않는다.
 
 ## 2. Drive 미연결: 가장 먼저 검수
 
@@ -50,11 +54,12 @@ npm run dev
 
 | 경로 | 환경 | 상태 | 비고 |
 |---|---|---|---|
-| Node 계약 테스트·정적 빌드 | 개발 PC, Node 24 | 통과: 68개 + 프로덕션 빌드 | 가짜 모델·가짜 Drive, 네트워크 호출 0건인 기본 두 단계 시험 포함 |
+| Node 계약 테스트·정적 빌드 | 개발 PC, Node 24 | 통과: 70개 + 프로덕션 빌드 | 가짜 모델·가짜 Drive, 네트워크 호출 0건인 기본 두 단계 및 PWA PNG/manifest 시험 포함 |
 | A1~A7 미연결 UI | 개발 PC 인앱 브라우저, production preview | 통과 | 원문 52,593자 → 8,202자 → 7,377자. 마지막 조건 보존, 복사 내용 일치, 미설정 저장 안내 후 결과 유지 |
 | 태블릿/모바일 폭 | 브라우저 1024×768 / 390×844 | 통과: 가로 넘침 없음 | 각각 3열/1열, 실기기 검수와 구분 |
 | B1~B6 연결 UI | Google 실계정·기기 | 검증 대기 | 운영자 설정 필요 |
 | 실기기 GPU | 지원 태블릿 | 검증 대기 | 선택 기능 |
-| 원격 HTTPS 주소 | GitHub Pages | 배포 전 | push와 배포 구분 |
+| 원격 HTTPS 주소 | GitHub Pages | 배포·기본 흐름 검수 통과 | 공개 주소에서 52,593자 → 8,202자 → 7,377자, 실제 복사·붙여넣기 일치 |
+| 홈 화면 앱 설치·실기기 offline | Android / iOS | 검증 대기 | manifest·192/512 PNG·Apple touch icon·standalone metadata 준비 |
 
 문제는 `행동 / 기대한 결과 / 실제 결과 / 재현 자료(합성·공개) / 기기·브라우저`로 기록한다. 오늘 검수한 뒤 발견 사항과 결과를 이 문서에 모아 다음 Beta 수정 범위를 정한다.

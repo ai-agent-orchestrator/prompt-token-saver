@@ -1,5 +1,9 @@
 # prompt token saver : 토큰을 아끼세요
 
+**공개 PWA Beta:** https://ai-agent-orchestrator.github.io/prompt-token-saver/
+
+일반 사용자는 위 주소를 모바일에서 엽니다. Android Chrome은 메뉴의 ‘앱 설치/홈 화면에 추가’, iPhone·iPad Safari는 공유 메뉴의 ‘홈 화면에 추가’로 앱처럼 실행합니다. 설치 없이 브라우저에서 사용해도 됩니다. 개발 서버를 실행할 필요가 없습니다.
+
 원문 붙여넣기 → 요약 1 → 필터로 한 번 더 요약한 요약 2 → 복사 또는 Drive 저장을 한 화면에서 사용하는 정적 웹 앱입니다. 원문과 두 요약을 세 텍스트 칸에서 비교하고, Drive에 저장한 결과는 아래 목록 표에서 확인합니다. 긴 자료의 맥락은 통합 요약 안에서 유지합니다. Gemini·Codex·Claude에는 사용자가 원하는 결과를 직접 복사해서 넣습니다.
 
 기본 기능은 무료로 사용하는 브라우저 원문 발췌·규칙 필터입니다. 유료 AI API, 서버 추론, API 키 결제를 연결하지 않습니다. 외부 AI 서비스의 이용 조건·사용량은 해당 서비스에 따릅니다. 사이트 방문자는 개발 서버를 실행하거나 자기 OAuth 앱을 만들 필요가 없습니다.
@@ -36,7 +40,7 @@ npm run preview
 - 선택 로컬 AI는 사용자가 가진 Web 호환 `.litertlm` 파일을 고급 설정에서 선택합니다. 첫 구현은 AI의 **정확한 원문 근거 선택**을 허용하며, 검증되지 않은 자유 의역을 정상 결과로 채택하지 않습니다. 공개 `prompt-token-saver` 엔진 전체와의 동등성·이식 완료를 주장하지 않습니다.
 - 모델 가중치를 자동 다운로드하지 않습니다. `npm ci`는 고정 SDK를 설치하고 `dev`/`build`는 SDK의 JS/WASM을 로컬 배포 자산으로 복사합니다. 현재 전체 runtime 자산은 약 123MB(117MiB, 네 WASM 변형 합계)이며 초기 앱 화면의 다운로드·선행 캐시에서 제외됩니다. 로컬 AI를 선택할 때 필요한 브라우저 변형을 요청하고 사용한 자산만 캐시합니다. 모델 파일·Google 문서·토큰은 서비스 워커에 캐시하지 않습니다.
 
-기본 브라우저 흐름과 가짜 API/모델 계약은 자동 테스트로 검사합니다. 실제 Google 계정의 OAuth·Picker·쓰기·목록 조회, 실제 태블릿 GPU 추론·성능, GitHub Pages의 실배포는 아직 검증 전입니다. API 경로 테스트를 실기기 품질 증거로 사용하지 않습니다.
+기본 브라우저 흐름과 가짜 API/모델 계약은 자동 테스트로 검사합니다. 공개 Pages 주소에서 미연결 요약·실제 복사 후 붙여넣기를 확인했고 70개 테스트·빌드가 통과했습니다. 실제 Google 계정의 OAuth·Picker·쓰기·목록 조회와 실제 태블릿 GPU·홈 화면 설치는 별도 검수입니다. API 경로 테스트를 실기기 품질 증거로 사용하지 않습니다.
 
 ## Google Drive: 운영자가 한 번 설정
 
@@ -56,7 +60,9 @@ access token은 탭 메모리에만 유지합니다. 만료되면 사용자 동�
 
 ## GitHub Pages: 검토 후 수동 배포
 
-배포 workflow는 저장소 루트의 `.github/workflows/tablet-pages.yml`입니다. `workflow_dispatch`만 선언했으므로 push나 PR로 자동 배포되지 않습니다. 이 작업에서는 workflow를 실행하거나 사이트를 배포하지 않았습니다.
+현재 Beta는 `claude/tablet-beta-pages`의 루트를 Pages publishing source로 지정한 정적 배포입니다. `https://ai-agent-orchestrator.github.io/prompt-token-saver/`에서 운영 중입니다. 아래 Actions 절차는 향후 해당 방식으로 전환할 경우의 대안이며, 현재 branch 기반 배포를 자동으로 바꾸지 않습니다.
+
+배포 workflow는 저장소 루트의 `.github/workflows/tablet-pages.yml`입니다. `workflow_dispatch`만 선언했으므로 이 workflow 자체는 push나 PR로 자동 실행되지 않습니다. 현재 배포에서는 이 workflow 대신 검토한 정적 파일만 별도 publishing branch에 게시했습니다.
 
 1. 공개 배포물에 개인 자료·비공개 팩·키가 없는지 확인합니다. 무료 GitHub Pages는 공개 저장소에서 사용할 수 있습니다. 비공개 설계 문서가 있는 저장소 전체를 공개 전환하지 말고, 필요하면 검토된 앱만 공개용 저장소로 분리합니다. [GitHub Pages 이용 조건](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)
 2. 저장소 Settings → Pages의 Source를 **GitHub Actions**로 설정합니다. Settings → Secrets and variables → Actions → Variables에 위 `VITE_GOOGLE_*` 세 값을 등록합니다. 이는 운영자 공개 설정이며 방문자의 토큰이나 개인 문서가 아닙니다. Google 연결을 제공하지 않을 때는 비워 두고 기본 로컬 기능만 운영할 수 있습니다.
