@@ -3,6 +3,7 @@ import { summarize, refine } from './core/summary/engine.js';
 import { outboundSummary } from './core/summary/output.js';
 import { boardMarkup, bindBoard } from './core/summary/board.js';
 import { maskOutbound } from './core/masking.js';
+import { privacyMarkup, refreshPrivacy } from './core/privacy-panel.js';
 import { GoogleDriveConnector } from './drive/google-drive.js';
 import { BrowserGenerator } from './model/generator.js';
 import { readSettings, writeSettings, RecoveryStore } from './storage.js';
@@ -22,7 +23,7 @@ const config = {
 const state = {
   title: '', text: '', source: {}, warnings: [], unsupported: 0,
   first: null, second: null, busy: false, dirty: false, message: '', error: false,
-  maskTerms: '', keepTerms: '', maskReview: false, modelFile: null,
+  privacyPreview: false, maskTerms: '', keepTerms: '', maskReview: false, modelFile: null,
   pendingOutboundRun: null, thresholds: {}, maskOverflowApproval: '', recovery: false, history: [], saved: [], nextPage: null, settingsOpen: false,
 };
 const store = new RecoveryStore();
@@ -51,33 +52,38 @@ function resultPane(run, stage) {
 }
 
 function settingsMarkup() {
-  return `<details class="settings" ${state.settingsOpen ? 'open' : ''}><summary>설정</summary><div class="settings-grid"><div><label for="keep-terms">보존할 단어</label><input id="keep-terms" value="${esc(state.keepTerms)}" placeholder="쉼표로 구분"/><label for="mask-terms">복사·저장할 때 가릴 이름·단어</label><input id="mask-terms" value="${esc(state.maskTerms)}" placeholder="개인 이름·기관명, 쉼표로 구분"/><p class="help">이메일·전화번호 등은 기본 규칙으로 가립니다. 개인 단어는 이 탭에서만 유지됩니다.</p><button class="small" id="confirm-mask">가릴 단어 확인</button><label class="check"><input type="checkbox" id="recover" ${state.recovery ? 'checked' : ''}/> 이 기기에 작업 보관</label>${state.history.length ? `<label for="restore">보관한 작업</label><select id="restore"><option value="">작업 선택</option>${state.history.filter(run => run.schema === 'pts.summary/v1').map((run, i) => `<option value="${i}">${esc(run.title)} · 요약 ${run.stage || 1}</option>`).join('')}</select>` : ''}</div><div><details><summary>선택: 내 기기의 AI 모델</summary><p class="help">기본은 예산 안에서 문장을 고르는 압축 발췌입니다. 호환 .litertlm 파일을 선택하면 AI 요약을 생성하고 규칙 검사 후 채택합니다. 외부 유료 API는 호출하지 않습니다.</p><input type="file" id="model-file" accept=".litertlm" aria-label="로컬 AI 모델 파일"/><p class="help">${state.modelFile ? esc(state.modelFile.name) : '모델 파일을 선택하지 않았습니다.'}</p></details><details class="operator"><summary>운영자: Google 연결 설정</summary><form id="google-settings"><label for="client-id">OAuth 웹 클라이언트 ID</label><input id="client-id" name="clientId" value="${esc(config.clientId)}"/><label for="api-key">Picker API key</label><input id="api-key" name="apiKey" value="${esc(config.apiKey)}" autocomplete="off"/><label for="app-id">프로젝트 번호</label><input id="app-id" name="appId" value="${esc(config.appId)}"/><p class="help">공개 배포 시 운영자가 한 번 설정합니다. 비밀키·로그인 토큰을 입력하지 마세요.</p><button class="small" type="submit">공개 설정 저장</button></form></details><button class="small disconnect" id="disconnect">Google 연결 해제</button></div></div></details>`;
+  return `<details class="settings" ${state.settingsOpen ? 'open' : ''}><summary>설정</summary><div class="settings-grid"><div><label for="keep-terms">보존할 단어</label><input id="keep-terms" value="${esc(state.keepTerms)}" placeholder="쉼표로 구분"/><label class="check"><input type="checkbox" id="recover" ${state.recovery ? 'checked' : ''}/> 이 기기에 작업 보관 (원문 근거 포함)</label>${state.history.length ? `<label for="restore">보관한 작업</label><select id="restore"><option value="">작업 선택</option>${state.history.filter(run => run.schema === 'pts.summary/v1').map((run, i) => `<option value="${i}">${esc(run.title)} · 요약 ${run.stage || 1}</option>`).join('')}</select>` : ''}</div><div><details><summary>선택: 내 기기의 AI 모델</summary><p class="help">기본은 예산 안에서 문장을 고르는 압축 발췌입니다. 호환 .litertlm 파일을 선택하면 AI 요약을 생성하고 규칙 검사 후 채택합니다. 외부 유료 API는 호출하지 않습니다.</p><input type="file" id="model-file" accept=".litertlm" aria-label="로컬 AI 모델 파일"/><p class="help">${state.modelFile ? esc(state.modelFile.name) : '모델 파일을 선택하지 않았습니다.'}</p></details><details class="operator"><summary>운영자: Google 연결 설정</summary><form id="google-settings"><label for="client-id">OAuth 웹 클라이언트 ID</label><input id="client-id" name="clientId" value="${esc(config.clientId)}"/><label for="api-key">Picker API key</label><input id="api-key" name="apiKey" value="${esc(config.apiKey)}" autocomplete="off"/><label for="app-id">프로젝트 번호</label><input id="app-id" name="appId" value="${esc(config.appId)}"/><p class="help">공개 배포 시 운영자가 한 번 설정합니다. 비밀키·로그인 토큰을 입력하지 마세요.</p><button class="small" type="submit">공개 설정 저장</button></form></details><button class="small disconnect" id="disconnect">Google 연결 해제</button></div></div></details>`;
 }
 
 function render() {
   const locked = state.busy ? 'disabled' : '';
   $('#app').innerHTML = `<main><header><h1>prompt token saver <span>: 토큰을 아끼세요</span><sup class="beta">Beta · Brief 1.0</sup><span class="lumi" role="img" aria-label="노란 루미">●<span aria-hidden="true">˘</span></span></h1><button class="small" id="demo" ${locked}>예제</button></header>
+    ${privacyMarkup(state)}
     <div class="document-row"><label for="title">제목</label><input id="title" value="${esc(state.title)}" maxlength="160" placeholder="저장할 문서 제목" ${locked}/><button class="small" id="drive-input" ${locked}>Drive에서 가져오기</button><label class="file-button">파일<input type="file" id="source-file" accept=".txt,.md,text/plain,text/markdown" hidden ${locked}/></label></div>
     <div class="panes"><section class="pane"><div class="pane-heading"><h2>원문 붙여넣기</h2><div class="pane-tools"><button class="small" id="copy-source" ${locked}>복사</button><button class="small" id="paste-source" ${locked}>붙여넣기</button><button class="small" id="clear-source" ${locked}>전체 지우기</button></div></div><textarea id="source" aria-label="요약할 원문" placeholder="요약할 프롬프트나 리서치 내용을 그대로 붙여넣으세요." ${locked}>${esc(state.text)}</textarea><div class="pane-meta" id="source-count">${format(length(state.text))}자 · 약 ${format(length(state.text) / 1500)}쪽</div></section>${resultPane(state.first, 1)}${resultPane(state.second, 2)}</div>
     <div class="actions"><button class="primary" id="summarize-first" ${locked}>요약하기 1</button><span class="action-arrow" aria-hidden="true">→</span><button class="primary" id="summarize-second" ${state.first?.status !== 'OK' || state.dirty || state.busy ? 'disabled' : ''}>필터로 요약하기 2</button><span class="action-arrow" aria-hidden="true">→</span><button id="drive-save" ${!currentRun() || state.dirty || state.busy ? 'disabled' : ''}>Google Drive에 저장</button>${state.busy && controller ? '<button class="small" id="cancel">중단</button>' : ''}</div>
     <p id="status" class="status ${state.error ? 'error' : ''}" role="status" aria-live="polite">${esc(state.message || '요약은 300자·원문 1/3 이하입니다. 선택한 문장의 관계를 검사하며 빠진 내용은 판정 보드에서 확인하세요.')}</p>
     ${state.maskReview ? '<p class="warning">복구한 작업의 개인 단어 가리기를 설정에서 확인한 뒤 복사·저장해 주세요.</p>' : ''}
     ${(state.pendingOutboundRun || currentRun()) && outboundSummary(state.pendingOutboundRun || currentRun(), terms(state.maskTerms)).overBudget ? '<p class="warning">가리기 적용 후 상한을 넘었습니다. 내용을 확인한 뒤 <button id="approve-mask-overflow" class="small">이 가리기 결과의 복사·저장 허용</button></p>' : ''}
-    ${boardMarkup(latestRun(), state.thresholds)}
+    ${boardMarkup(latestRun(), state.thresholds, mask)}
     <section class="saved-section"><div class="saved-heading"><h2>저장 목록</h2><button class="small" id="refresh-saved" ${locked}>Drive 목록 불러오기</button></div><div class="table-wrap"><table><thead><tr><th>제목</th><th>저장·수정 시각</th><th>열기</th></tr></thead><tbody>${state.saved.length ? state.saved.map(item => `<tr><td>${esc(item.title)}</td><td>${esc(dateText(item.modifiedAt))}</td><td><a href="${esc(driveUrl(item.id))}" target="_blank" rel="noopener noreferrer">Drive 열기 ↗</a></td></tr>`).join('') : '<tr><td colspan="3" class="empty">저장한 문서를 여기에 표시합니다.</td></tr>'}</tbody></table></div>${state.nextPage ? `<button class="small more" id="more-saved" ${locked}>더 불러오기</button>` : ''}</section>${settingsMarkup()}
     <p class="footnote">Brief 1.0 · 요약 상한 300자·원문 1/3 · 입력과 요약은 기기에서 처리합니다. Drive는 로그인 후 선택한 자료만 사용합니다.</p></main>`;
   bind();
+  refreshPrivacy($('#app'), state);
 }
 
 function dateText(value) { try { return value ? new Date(value).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', dateStyle: 'short', timeStyle: 'short' }) : '—'; } catch { return '—'; } }
 function driveUrl(id) { return `https://drive.google.com/drive/folders/${encodeURIComponent(id)}`; }
 
 function bind() {
-  document.querySelectorAll('.settings input, .settings select, .settings button').forEach(element => { element.disabled = state.busy; });
+  document.querySelectorAll('.settings input, .settings select, .settings button, .privacy-panel input, .privacy-panel button').forEach(element => { element.disabled = state.busy; });
   $('#title').addEventListener('input', event => { state.title = event.target.value; markDirty(); });
-  $('#source').addEventListener('input', event => { state.text = event.target.value; state.source = {}; state.unsupported = 0; state.warnings = []; markDirty(); $('#source-count').textContent = `${format(length(state.text))}자 · 약 ${format(length(state.text) / 1500)}쪽`; });
+  $('#source').addEventListener('input', event => { state.text = event.target.value; state.source = {}; state.unsupported = 0; state.warnings = []; markDirty(); $('#source-count').textContent = `${format(length(state.text))}자 · 약 ${format(length(state.text) / 1500)}쪽`; refreshPrivacy($('#app'), state); });
   $('#copy-source').addEventListener('click', copySource);
   $('#paste-source').addEventListener('click', pasteSource);
+  $('#copy-masked-source').addEventListener('click', copySource);
+  $('#preview-privacy').addEventListener('click', () => { state.privacyPreview = true; $('#privacy-preview').open = true; refreshPrivacy($('#app'), state); });
+  $('#privacy-preview').addEventListener('toggle', event => { state.privacyPreview = event.target.open; refreshPrivacy($('#app'), state); });
   $('#clear-source').addEventListener('click', () => {
     if (state.busy) return;
     const field = $('#source');
@@ -97,8 +103,8 @@ function bind() {
   $('#more-saved')?.addEventListener('click', () => refreshSaved(true));
   document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', () => copySummary(Number(button.dataset.copy))));
   $('#keep-terms').addEventListener('input', event => { state.keepTerms = event.target.value; markDirty(); });
-  $('#mask-terms').addEventListener('input', event => { state.maskTerms = event.target.value; state.maskOverflowApproval = ''; updateSummaryPreview(); });
-  $('#confirm-mask').addEventListener('click', () => { state.maskReview = false; render(); message('복사·저장할 때 적용할 단어 가리기를 확인했습니다.'); });
+  $('#mask-terms').addEventListener('input', event => { state.maskTerms = event.target.value; state.maskOverflowApproval = ''; updateSummaryPreview(); refreshPrivacy($('#app'), state); });
+  $('#confirm-mask')?.addEventListener('click', () => { state.maskReview = false; render(); message('복사·저장할 때 적용할 단어 가리기를 확인했습니다.'); });
   $('#recover').addEventListener('change', async event => {
     state.recovery = event.target.checked;
     if (state.recovery && currentRun()) try { await persist(currentRun()); message('현재 결과를 이 기기에 보관했습니다.'); } catch (error) { message(errorText(error), true); }
@@ -107,9 +113,13 @@ function bind() {
   $('#google-settings').addEventListener('submit', event => { event.preventDefault(); if (state.busy) return; try { Object.assign(config, writeSettings(Object.fromEntries(new FormData(event.target)))); drive.disconnect(); drive = new GoogleDriveConnector(config); message('공개 연결 설정을 저장했습니다.'); } catch (error) { message(errorText(error), true); } });
   $('#disconnect').addEventListener('click', () => { drive.disconnect(); state.saved = []; state.nextPage = null; render(); message('Google 연결을 해제했습니다. 현재 요약은 유지됩니다.'); });
   $('#approve-mask-overflow')?.addEventListener('click', () => { state.maskOverflowApproval = summary(state.pendingOutboundRun || currentRun()); state.pendingOutboundRun = null; message('확인한 가리기 결과의 복사·저장을 허용했습니다.'); });
-  bindBoard($('#app'), latestRun(), { keepTerms: terms(state.keepTerms), onThresholds: values => { state.thresholds = values; }, onRerun: values => { if (!state.busy) { state.thresholds = values; process(1); } } });
+  bindDecisionBoard();
   $('#model-file').addEventListener('change', event => { state.modelFile = event.target.files[0] || null; message(state.modelFile ? '선택한 로컬 모델을 다음 요약에 사용합니다. 외부 AI로 보내지 않습니다.' : '모델 없이 무료 원문 발췌로 처리합니다.'); });
   $('.settings').addEventListener('toggle', event => { state.settingsOpen = event.target.open; });
+}
+
+function bindDecisionBoard() {
+  bindBoard($('#app'), latestRun(), { keepTerms: terms(state.keepTerms), onThresholds: values => { state.thresholds = values; }, onRerun: values => { if (!state.busy) { state.thresholds = values; process(1); } } });
 }
 
 function updateSummaryPreview() {
@@ -119,6 +129,13 @@ function updateSummaryPreview() {
     const text = summary(run);
     field.value = text;
     field.nextElementSibling.textContent = resultMeta(run, text);
+  }
+  const board = $('.decision-board');
+  if (board) {
+    const open = board.open;
+    board.outerHTML = boardMarkup(latestRun(), state.thresholds, mask);
+    $('.decision-board').open = open;
+    bindDecisionBoard();
   }
 }
 
@@ -160,18 +177,19 @@ async function process(stage) {
 
 function maskingReady() {
   if (!state.maskReview) return true;
-  state.settingsOpen = true; render(); $('#mask-terms').focus(); message('개인 단어 가리기를 확인한 뒤 복사·저장해 주세요.', true); return false;
+  render(); $('#mask-terms').focus(); message('상단 개인정보 마스킹에서 가릴 단어를 확인한 뒤 복사·저장해 주세요.', true); return false;
 }
 
 async function copySource() {
   if (state.busy) return;
   try {
-    await navigator.clipboard.writeText(state.text);
-    message('원문을 복사했습니다.');
+    await navigator.clipboard.writeText(mask(state.text));
+    message('개인정보를 가린 원문을 복사했습니다.');
   } catch {
-    const field = $('#source');
+    state.privacyPreview = true; $('#privacy-preview').open = true; refreshPrivacy($('#app'), state);
+    const field = $('#masked-source');
     field.focus(); field.select(); field.setSelectionRange(0, field.value.length);
-    message('원문을 전체 선택했습니다. Ctrl+C 또는 기기의 복사 메뉴를 사용해 주세요.');
+    message('가린 원문을 전체 선택했습니다. Ctrl+C 또는 기기의 복사 메뉴를 사용해 주세요.');
   }
 }
 

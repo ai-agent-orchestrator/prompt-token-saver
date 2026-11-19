@@ -38,3 +38,7 @@
 - [공개 Beta 검증 화면](images/brief-beta-live.jpg).
 
 이 E2E는 실제 Google 계정 저장·로컬 모델 품질·홈 화면 설치 검증을 포함하지 않는다.
+
+## 개인정보 마스킹 확장
+
+제목 바로 아래 마스킹 영역을 추가하고 ai-security-architecture의 Python Privacy Output Guard를 JS로 이식했다. 가리기 미리보기·원문/요약 복사·Drive 출력·보드 표시에 적용한다. JS 테스트 91개와 빌드 통과. [재사용 근거·경계](../apps/tablet/docs/privacy-guard-port.md).
