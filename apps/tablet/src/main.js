@@ -3,7 +3,7 @@ import { summarize, refine } from './core/summary/engine.js';
 import { outboundSummary } from './core/summary/output.js';
 import { boardMarkup, bindBoard } from './core/summary/board.js';
 import { maskOutbound } from './core/masking.js';
-import { privacyMarkup, refreshPrivacy } from './core/privacy-panel.js';
+import { privacyMarkup } from './core/privacy-panel.js';
 import { GoogleDriveConnector } from './drive/google-drive.js';
 import { BrowserGenerator } from './model/generator.js';
 import { readSettings, writeSettings, RecoveryStore } from './storage.js';
@@ -23,7 +23,7 @@ const config = {
 const state = {
   title: '', text: '', source: {}, warnings: [], unsupported: 0,
   first: null, second: null, busy: false, dirty: false, message: '', error: false,
-  privacyPreview: false, maskTerms: '', keepTerms: '', maskReview: false, modelFile: null,
+  privacyEnabled: true, maskTerms: '', keepTerms: '', maskReview: false, modelFile: null,
   pendingOutboundRun: null, thresholds: {}, maskOverflowApproval: '', recovery: false, history: [], saved: [], nextPage: null, settingsOpen: false,
 };
 const store = new RecoveryStore();
@@ -31,8 +31,9 @@ let drive = new GoogleDriveConnector(config);
 let controller;
 let generator;
 
-const mask = value => maskOutbound(value, { terms: terms(state.maskTerms) }).text;
-const summary = run => outboundSummary(run, terms(state.maskTerms)).text;
+const mask = value => state.privacyEnabled ? maskOutbound(value, { terms: terms(state.maskTerms) }).text : String(value ?? '');
+const outbound = run => outboundSummary(run, terms(state.maskTerms), state.privacyEnabled);
+const summary = run => outbound(run).text;
 const currentRun = () => state.second?.status === 'OK' ? state.second : state.first?.status === 'OK' ? state.first : null;
 const latestRun = () => state.second || state.first;
 
@@ -64,12 +65,11 @@ function render() {
     <div class="actions"><button class="primary" id="summarize-first" ${locked}>요약하기 1</button><span class="action-arrow" aria-hidden="true">→</span><button class="primary" id="summarize-second" ${state.first?.status !== 'OK' || state.dirty || state.busy ? 'disabled' : ''}>필터로 요약하기 2</button><span class="action-arrow" aria-hidden="true">→</span><button id="drive-save" ${!currentRun() || state.dirty || state.busy ? 'disabled' : ''}>Google Drive에 저장</button>${state.busy && controller ? '<button class="small" id="cancel">중단</button>' : ''}</div>
     <p id="status" class="status ${state.error ? 'error' : ''}" role="status" aria-live="polite">${esc(state.message || '요약은 300자·원문 1/3 이하입니다. 선택한 문장의 관계를 검사하며 빠진 내용은 판정 보드에서 확인하세요.')}</p>
     ${state.maskReview ? '<p class="warning">복구한 작업의 개인 단어 가리기를 설정에서 확인한 뒤 복사·저장해 주세요.</p>' : ''}
-    ${(state.pendingOutboundRun || currentRun()) && outboundSummary(state.pendingOutboundRun || currentRun(), terms(state.maskTerms)).overBudget ? '<p class="warning">가리기 적용 후 상한을 넘었습니다. 내용을 확인한 뒤 <button id="approve-mask-overflow" class="small">이 가리기 결과의 복사·저장 허용</button></p>' : ''}
+    ${(state.pendingOutboundRun || currentRun()) && outbound(state.pendingOutboundRun || currentRun()).overBudget ? '<p class="warning">가리기 적용 후 상한을 넘었습니다. 내용을 확인한 뒤 <button id="approve-mask-overflow" class="small">이 가리기 결과의 복사·저장 허용</button></p>' : ''}
     ${boardMarkup(latestRun(), state.thresholds, mask)}
     <section class="saved-section"><div class="saved-heading"><h2>저장 목록</h2><button class="small" id="refresh-saved" ${locked}>Drive 목록 불러오기</button></div><div class="table-wrap"><table><thead><tr><th>제목</th><th>저장·수정 시각</th><th>열기</th></tr></thead><tbody>${state.saved.length ? state.saved.map(item => `<tr><td>${esc(item.title)}</td><td>${esc(dateText(item.modifiedAt))}</td><td><a href="${esc(driveUrl(item.id))}" target="_blank" rel="noopener noreferrer">Drive 열기 ↗</a></td></tr>`).join('') : '<tr><td colspan="3" class="empty">저장한 문서를 여기에 표시합니다.</td></tr>'}</tbody></table></div>${state.nextPage ? `<button class="small more" id="more-saved" ${locked}>더 불러오기</button>` : ''}</section>${settingsMarkup()}
     <p class="footnote">Brief 1.0 · 요약 상한 300자·원문 1/3 · 입력과 요약은 기기에서 처리합니다. Drive는 로그인 후 선택한 자료만 사용합니다.</p></main>`;
   bind();
-  refreshPrivacy($('#app'), state);
 }
 
 function dateText(value) { try { return value ? new Date(value).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', dateStyle: 'short', timeStyle: 'short' }) : '—'; } catch { return '—'; } }
@@ -78,12 +78,15 @@ function driveUrl(id) { return `https://drive.google.com/drive/folders/${encodeU
 function bind() {
   document.querySelectorAll('.settings input, .settings select, .settings button, .privacy-panel input, .privacy-panel button').forEach(element => { element.disabled = state.busy; });
   $('#title').addEventListener('input', event => { state.title = event.target.value; markDirty(); });
-  $('#source').addEventListener('input', event => { state.text = event.target.value; state.source = {}; state.unsupported = 0; state.warnings = []; markDirty(); $('#source-count').textContent = `${format(length(state.text))}자 · 약 ${format(length(state.text) / 1500)}쪽`; refreshPrivacy($('#app'), state); });
+  $('#source').addEventListener('input', event => { state.text = event.target.value; state.source = {}; state.unsupported = 0; state.warnings = []; markDirty(); $('#source-count').textContent = `${format(length(state.text))}자 · 약 ${format(length(state.text) / 1500)}쪽`; });
   $('#copy-source').addEventListener('click', copySource);
   $('#paste-source').addEventListener('click', pasteSource);
-  $('#copy-masked-source').addEventListener('click', copySource);
-  $('#preview-privacy').addEventListener('click', () => { state.privacyPreview = true; $('#privacy-preview').open = true; refreshPrivacy($('#app'), state); });
-  $('#privacy-preview').addEventListener('toggle', event => { state.privacyPreview = event.target.open; refreshPrivacy($('#app'), state); });
+  $('#mask-terms').disabled = state.busy || !state.privacyEnabled;
+  $('#privacy-enabled').addEventListener('change', event => {
+    state.privacyEnabled = event.target.checked;
+    state.maskReview = false; state.maskOverflowApproval = ''; state.pendingOutboundRun = null;
+    render();
+  });
   $('#clear-source').addEventListener('click', () => {
     if (state.busy) return;
     const field = $('#source');
@@ -103,8 +106,7 @@ function bind() {
   $('#more-saved')?.addEventListener('click', () => refreshSaved(true));
   document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', () => copySummary(Number(button.dataset.copy))));
   $('#keep-terms').addEventListener('input', event => { state.keepTerms = event.target.value; markDirty(); });
-  $('#mask-terms').addEventListener('input', event => { state.maskTerms = event.target.value; state.maskOverflowApproval = ''; updateSummaryPreview(); refreshPrivacy($('#app'), state); });
-  $('#confirm-mask')?.addEventListener('click', () => { state.maskReview = false; render(); message('복사·저장할 때 적용할 단어 가리기를 확인했습니다.'); });
+  $('#mask-terms').addEventListener('input', event => { state.maskTerms = event.target.value; state.maskReview = false; state.maskOverflowApproval = ''; updateSummaryPreview(); });
   $('#recover').addEventListener('change', async event => {
     state.recovery = event.target.checked;
     if (state.recovery && currentRun()) try { await persist(currentRun()); message('현재 결과를 이 기기에 보관했습니다.'); } catch (error) { message(errorText(error), true); }
@@ -176,7 +178,7 @@ async function process(stage) {
 }
 
 function maskingReady() {
-  if (!state.maskReview) return true;
+  if (!state.maskReview || !state.privacyEnabled) return true;
   render(); $('#mask-terms').focus(); message('상단 개인정보 마스킹에서 가릴 단어를 확인한 뒤 복사·저장해 주세요.', true); return false;
 }
 
@@ -184,12 +186,15 @@ async function copySource() {
   if (state.busy) return;
   try {
     await navigator.clipboard.writeText(mask(state.text));
-    message('개인정보를 가린 원문을 복사했습니다.');
+    message(state.privacyEnabled ? '개인정보를 가린 원문을 복사했습니다.' : '원문을 복사했습니다.');
   } catch {
-    state.privacyPreview = true; $('#privacy-preview').open = true; refreshPrivacy($('#app'), state);
-    const field = $('#masked-source');
+    $('#copy-fallback')?.remove();
+    const field = document.createElement('textarea');
+    field.id = 'copy-fallback'; field.className = 'copy-fallback'; field.readOnly = true;
+    field.setAttribute('aria-label', '복사할 내용'); field.value = mask(state.text);
+    $('#status').after(field);
     field.focus(); field.select(); field.setSelectionRange(0, field.value.length);
-    message('가린 원문을 전체 선택했습니다. Ctrl+C 또는 기기의 복사 메뉴를 사용해 주세요.');
+    message('복사할 내용을 전체 선택했습니다. Ctrl+C 또는 기기의 복사 메뉴를 사용해 주세요.');
   }
 }
 
@@ -224,7 +229,7 @@ async function copySummary(stage) {
 }
 
 function outboundReady(run) {
-  const artifact = outboundSummary(run, terms(state.maskTerms));
+  const artifact = outbound(run);
   if (!artifact.overBudget || state.maskOverflowApproval === artifact.text) return true;
   message(`가리기 결과 ${artifact.codepoints}자가 상한 ${run.metrics.budget}자를 넘습니다. 가리기 내용을 검토한 뒤 요약 아래의 허용 버튼을 눌러 주세요.`, true);
   state.pendingOutboundRun = run;
@@ -269,7 +274,7 @@ async function saveDrive() {
     if (!drive.isConnected) await drive.connect();
     const version = await drive.checkSourceVersion(run.source || {});
     if (version.changed) { const error = new Error('원문이 요약 후 바뀌었습니다. 다시 가져와 요약해 주세요.'); error.code = 'SOURCE_CHANGED'; throw error; }
-    const artifact = { ...outboundSummary(run, terms(state.maskTerms)), key: 'summary', title: mask(`${run.title} · 요약 ${run.stage || 1}`) };
+    const artifact = { ...outbound(run), key: 'summary', title: mask(`${run.title} · 요약 ${run.stage || 1}`) };
     const save = () => drive.saveBundle({ runId: run.id, title: mask(`${run.title} · 요약 ${run.stage || 1}`), artifacts: [artifact], sourceFileId: run.source?.fileId, ledger: run.saveLedger || {}, onLedger: async ledger => { run.saveLedger = structuredClone(ledger); await persist(run); } });
     const result = navigator.locks ? await navigator.locks.request(`pts-save-${run.id}`, { ifAvailable: true }, lock => { if (!lock) throw new Error('다른 탭에서 저장 중입니다.'); return save(); }) : await save();
     run.driveSaveResult = result; await persist(run);

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { maskPersonalData, MASKING_VERSION } from '../src/core/privacy-guard.js';
 import { inspectPrivacy, maskOutbound } from '../src/core/masking.js';
-import { privacyMarkup, privacySummary } from '../src/core/privacy-panel.js';
+import { privacyMarkup } from '../src/core/privacy-panel.js';
 import { boardMarkup } from '../src/core/summary/board.js';
 import { summarize } from '../src/core/summary/engine.js';
 
@@ -50,14 +50,14 @@ test('custom literal terms win overlapping matches and preserve surrounding orig
   assert.equal(inspectPrivacy(result.text).redactions, 0);
 });
 
-test('prominent panel exposes a safe preview with no personal-data values in count messages', () => {
-  const result = inspectPrivacy('010-0000-0000 sample@example.invalid');
-  const status = privacySummary(result);
-  assert.ok(status.includes('2곳 가림') && !status.includes('010') && !status.includes('example'));
-  const html = privacyMarkup({ maskTerms: '<script>', busy: false, privacyPreview: false });
-  assert.ok(html.includes('개인정보 마스킹') && html.includes('마스킹본 복사'));
+test('privacy UI contains only the switch, short help and extra terms input', () => {
+  const html = privacyMarkup({ maskTerms: '<script>', busy: false, privacyEnabled: true });
+  assert.ok(html.includes('개인정보 보호기능 켜기') && html.includes('주민번호/전화번호/이메일'));
+  assert.ok(html.includes('추가로 가릴 이름·기관·주소'));
   assert.ok(!html.includes('<script>') && html.includes('&lt;script&gt;'));
-  assert.ok(!html.includes('localStorage') && !html.includes('fetch('));
+  assert.ok(!html.includes('<button') && !html.includes('<details') && !html.includes('<textarea'));
+  assert.ok(!html.includes('자동 가리기') && !html.includes('마스킹 버전'));
+  assert.ok(privacyMarkup({ maskTerms: '', busy: false, privacyEnabled: false }).includes('placeholder="쉼표로 구분해 입력" disabled'));
 });
 
 test('the decision board masks candidate text without mutating verification evidence', async () => {
@@ -75,4 +75,12 @@ test('partial dictionary matches cannot expose the remainder of a detected ident
   const result = inspectPrivacy('sample@example.invalid 010-0000-0000', { terms: ['sample', '010'] });
   assert.equal(result.redactions, 2);
   assert.ok(!result.text.includes('example.invalid') && !result.text.includes('0000-0000'));
+});
+
+import { outboundSummary } from '../src/core/summary/output.js';
+test('privacy switch governs the actual outbound body', () => {
+  const run = { status: 'OK', body: '010-0000-0000 홍길동', metrics: { budget: 300 } };
+  assert.equal(outboundSummary(run, ['홍길동'], false).text, run.body);
+  assert.ok(!outboundSummary(run, ['홍길동'], true).text.includes('010-0000-0000'));
+  assert.ok(!outboundSummary(run, ['홍길동'], true).text.includes('홍길동'));
 });

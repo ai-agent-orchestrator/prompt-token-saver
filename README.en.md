@@ -37,7 +37,7 @@ The body is at most **300 Unicode codepoints AND one third of the normalized sou
 - No paid inference API, developer backend or sign-up. Model weights are not automatically downloaded.
 - Character counts are not token counts or token savings. Actual surprisal and browser vector search are not features of this release.
 
-A prominent **Privacy masking** panel directly below the title provides an original-preserving preview and masked copy. Phone/email/ID/account patterns include fullwidth/hidden-character detection; names, organizations and addresses are explicitly supplied by the user. Source copy, summaries, Drive outputs and board display use masking. [Source-module port record](apps/tablet/docs/privacy-guard-port.md)
+A compact **Enable privacy protection** switch below the title controls masking in source copy, summaries and Drive outputs. The only extra field is for names, organizations and addresses to hide. The switch starts on; turning it off disables masking. Source input remains unchanged. [Source-module port record](apps/tablet/docs/privacy-guard-port.md)
 
 The UI retains dark mode with electric blue borders/focus, a yellow Lumi accent, and responsive source/stage-one/stage-two panels.
 
