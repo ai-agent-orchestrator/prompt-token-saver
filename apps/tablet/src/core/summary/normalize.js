@@ -2,7 +2,7 @@ import constants from '../../../../../spec/constants.json' with { type: 'json' }
 export const C = Object.freeze(constants);
 export const cp = text => [...String(text)].length;
 export const normalize = text => String(text).replace(/\r\n?/g, '\n');
-export const budgetFor = text => Math.min(C.BUDGET_CAP, Math.floor(cp(text) / C.BUDGET_DIV));
+export const budgetFor = text => Math.floor(cp(text) / C.BUDGET_DIV);
 export async function sourceHash(text) {
   const bytes = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return [...new Uint8Array(bytes)].map(b => b.toString(16).padStart(2, '0')).join('');

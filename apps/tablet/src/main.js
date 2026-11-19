@@ -49,7 +49,7 @@ function resultMeta(run, text) {
 }
 function resultPane(run, stage) {
   const output = summary(run);
-  return `<section class="pane"><div class="pane-heading"><h2>요약 ${stage}</h2><button class="small" data-copy="${stage}" ${run?.status !== 'OK' || state.busy ? 'disabled' : ''}>복사</button></div><textarea id="summary-${stage}" readonly aria-label="요약 ${stage} 결과" placeholder="${stage === 1 ? '300자·원문 1/3 이하의 요약 본문' : '1차보다 짧은 요약 본문'}">${esc(output)}</textarea><div class="pane-meta">${esc(resultMeta(run, output))}</div></section>`;
+  return `<section class="pane"><div class="pane-heading"><h2>요약 ${stage}</h2><button class="small" data-copy="${stage}" ${run?.status !== 'OK' || state.busy ? 'disabled' : ''}>복사</button></div><textarea id="summary-${stage}" readonly aria-label="요약 ${stage} 결과" placeholder="${stage === 1 ? '원문 1/3 이하의 요약 본문' : '1차보다 짧은 요약 본문'}">${esc(output)}</textarea><div class="pane-meta">${esc(resultMeta(run, output))}</div></section>`;
 }
 
 function settingsMarkup() {
@@ -63,12 +63,12 @@ function render() {
     <div class="document-row"><label for="title">제목</label><input id="title" value="${esc(state.title)}" maxlength="160" placeholder="저장할 문서 제목" ${locked}/><button class="small" id="drive-input" ${locked}>Drive에서 가져오기</button><label class="file-button">파일<input type="file" id="source-file" accept=".txt,.md,text/plain,text/markdown" hidden ${locked}/></label></div>
     <div class="panes"><section class="pane"><div class="pane-heading"><h2>원문 붙여넣기</h2><div class="pane-tools"><button class="small" id="copy-source" ${locked}>복사</button><button class="small" id="paste-source" ${locked}>붙여넣기</button><button class="small" id="clear-source" ${locked}>전체 지우기</button></div></div><textarea id="source" aria-label="요약할 원문" placeholder="요약할 프롬프트나 리서치 내용을 그대로 붙여넣으세요." ${locked}>${esc(state.text)}</textarea><div class="pane-meta" id="source-count">${format(length(state.text))}자 · 약 ${format(length(state.text) / 1500)}쪽</div></section>${resultPane(state.first, 1)}${resultPane(state.second, 2)}</div>
     <div class="actions"><button class="primary" id="summarize-first" ${locked}>요약하기 1</button><span class="action-arrow" aria-hidden="true">→</span><button class="primary" id="summarize-second" ${state.first?.status !== 'OK' || state.dirty || state.busy ? 'disabled' : ''}>필터로 요약하기 2</button><span class="action-arrow" aria-hidden="true">→</span><button id="drive-save" ${!currentRun() || state.dirty || state.busy ? 'disabled' : ''}>Google Drive에 저장</button>${state.busy && controller ? '<button class="small" id="cancel">중단</button>' : ''}</div>
-    <p id="status" class="status ${state.error ? 'error' : ''}" role="status" aria-live="polite">${esc(state.message || '요약은 300자·원문 1/3 이하입니다. 선택한 문장의 관계를 검사하며 빠진 내용은 판정 보드에서 확인하세요.')}</p>
+    <p id="status" class="status ${state.error ? 'error' : ''}" role="status" aria-live="polite">${esc(state.message || '요약은 원문 1/3 이하입니다. 선택한 문장의 관계를 검사하며 빠진 내용은 판정 보드에서 확인하세요.')}</p>
     ${state.maskReview ? '<p class="warning">복구한 작업의 개인 단어 가리기를 설정에서 확인한 뒤 복사·저장해 주세요.</p>' : ''}
     ${(state.pendingOutboundRun || currentRun()) && outbound(state.pendingOutboundRun || currentRun()).overBudget ? '<p class="warning">가리기 적용 후 상한을 넘었습니다. 내용을 확인한 뒤 <button id="approve-mask-overflow" class="small">이 가리기 결과의 복사·저장 허용</button></p>' : ''}
     ${boardMarkup(latestRun(), state.thresholds, mask)}
     <section class="saved-section"><div class="saved-heading"><h2>저장 목록</h2><button class="small" id="refresh-saved" ${locked}>Drive 목록 불러오기</button></div><div class="table-wrap"><table><thead><tr><th>제목</th><th>저장·수정 시각</th><th>열기</th></tr></thead><tbody>${state.saved.length ? state.saved.map(item => `<tr><td>${esc(item.title)}</td><td>${esc(dateText(item.modifiedAt))}</td><td><a href="${esc(driveUrl(item.id))}" target="_blank" rel="noopener noreferrer">Drive 열기 ↗</a></td></tr>`).join('') : '<tr><td colspan="3" class="empty">저장한 문서를 여기에 표시합니다.</td></tr>'}</tbody></table></div>${state.nextPage ? `<button class="small more" id="more-saved" ${locked}>더 불러오기</button>` : ''}</section>${settingsMarkup()}
-    <p class="footnote">Brief 1.0 · 요약 상한 300자·원문 1/3 · 입력과 요약은 기기에서 처리합니다. Drive는 로그인 후 선택한 자료만 사용합니다.</p></main>`;
+    <p class="footnote">Brief 1.0 · 요약 상한 원문 1/3 · 입력과 요약은 기기에서 처리합니다. Drive는 로그인 후 선택한 자료만 사용합니다.</p></main>`;
   bind();
 }
 

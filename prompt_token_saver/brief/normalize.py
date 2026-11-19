@@ -6,7 +6,7 @@ C = json.loads(Path(__file__).with_name("constants.json").read_text(encoding="ut
 def normalize(text):
     return text.replace("\r\n", "\n").replace("\r", "\n")
 def budget_for(text):
-    return min(C["BUDGET_CAP"], len(text) // C["BUDGET_DIV"])
+    return len(text) // C["BUDGET_DIV"]
 def source_hash(text):
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 def grams(text, n=3):

@@ -14,7 +14,7 @@ test('the current demo produces only budgeted bodies and reports omitted evidenc
   const first = await summarize(text);
   const second = await refine(first, { text });
   assert.equal(first.status, 'OK'); assert.equal(second.status, 'OK');
-  assert.ok([...first.body].length <= 300 && [...second.body].length < [...first.body].length);
+  assert.ok([...first.body].length <= Math.floor([...text].length / 3) && [...second.body].length < [...first.body].length);
   assert.ok(first.report.omittedGroups.length > 0 && first.report.omittedAnchors.length > 0);
   assert.equal(first.metrics.tokens, null);
 });

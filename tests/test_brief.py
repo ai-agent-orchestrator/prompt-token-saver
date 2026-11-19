@@ -30,7 +30,7 @@ def test_shared_fixture(fixture):
     assert_result(result)
     assert result["status"] == fixture["expect"]["status"]
     assert result["body"] == fixture["expect"]["deterministicBody"]
-    assert len(result["body"]) <= min(300, result["metrics"]["sourceCodepoints"]//3, fixture["expect"]["maxBody"])
+    assert len(result["body"]) <= min(result["metrics"]["sourceCodepoints"]//3, fixture["expect"]["maxBody"])
     assert result["metrics"]["tokens"] is None
     assert not POLLUTED.search(result["body"])
     if result["status"] == "OK":
@@ -156,4 +156,4 @@ def test_private_user_fixture_when_available():
     first = summarize(text)
     second = refine(first, text=text)
     assert first["status"] == second["status"] == "OK"
-    assert 0 < len(second["body"]) < len(first["body"]) <= 300
+    assert 0 < len(second["body"]) < len(first["body"]) <= len(text)//3

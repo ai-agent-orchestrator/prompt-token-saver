@@ -1,6 +1,5 @@
 {
   "version": "c1",
-  "BUDGET_CAP": 300,
   "BUDGET_DIV": 3,
   "MIN_SOURCE_CP": 60,
   "MIN_GROUP_BUDGET": 40,

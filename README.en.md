@@ -18,7 +18,7 @@ Google login is optional for paste → Summary 1 → Summary 2 → copy. Initial
 
 ## New summary engine — Brief 1.0
 
-The body is at most **300 Unicode codepoints AND one third of the normalized source**. Whitespace, punctuation and newlines count. The former research-card renderer and its repeated instructions have been removed.
+The body is at most **one third of the normalized source** (no fixed cap). Whitespace, punctuation and newlines count. The former research-card renderer and its repeated instructions have been removed.
 
 1. Paste a source or select **예제** (Example). The source also has copy and paste buttons.
 2. Select **요약하기 1**. Only the summary body appears in the result field.
@@ -29,7 +29,7 @@ The body is at most **300 Unicode codepoints AND one third of the normalized sou
 ### Processing and limits
 
 - The default is deterministic **compressed extraction**, without a model. It selects sentences and applies explicit conservative rules. Omitted information is recorded separately.
-- Rules check numeric relationships, subjects, negation and conditions in selected sentences. They do not prove semantic correctness or preserve every fact. A 300-character brief can omit important topics; inspect the board.
+- Rules check numeric relationships, subjects, negation and conditions in selected sentences. They do not prove semantic correctness or preserve every fact. A one-third brief can omit important topics; inspect the board.
 - Select a compatible local `.litertlm` file for on-device summary generation. Generated candidates and extractive fallbacks pass the same checks. Actual model quality and tablet GPU validation remain separate.
 - Oversized sentences are never sliced into partial output. Failure details stay outside the body.
 - At least 120 normalized source codepoints are needed. Changing the source requires a new stage-one run.

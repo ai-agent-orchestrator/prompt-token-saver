@@ -90,7 +90,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="pts", description="Prompt token saver")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     commands = parser.add_subparsers(dest="command")
-    brief_parser = commands.add_parser("brief", help="Create a brief within 300 codepoints and one third of source")
+    brief_parser = commands.add_parser("brief", help="Create a brief within one third of source")
     brief_parser.add_argument("file")
     brief_parser.add_argument("--stage2", action="store_true")
     brief_parser.add_argument("--model")
