@@ -22,4 +22,4 @@ pts = "prompt_token_saver.cli:main"
 include = ["prompt_token_saver*"]
 
 [tool.setuptools.package-data]
-prompt_token_saver = ["demo/*.md"]
+prompt_token_saver = ["demo/*.md", "brief/constants.json"]

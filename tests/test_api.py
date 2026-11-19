@@ -26,7 +26,7 @@ def test_string_input_and_public_exports():
     assert report.items[0].source_chunk_ids == ["doc-1:0"]
     assert compressed_text(report) == SOURCE
     assert set(prompt_token_saver.__all__) == {
-        "compress", "compressed_text", "summary_line", "RunReport",
+        "compress", "compressed_text", "summary_line", "summarize_brief", "RunReport",
     }
     assert report.settings["meaning_rule"] == asdict(
         GapRule.default_for(HashEmbedder().model_id))
@@ -183,11 +183,11 @@ def test_invalid_settings_propagate(options):
 def test_summary_line_counts_and_savings():
     report = compress(SOURCE)
     assert summary_line(report) == (
-        "in 6 tokens -> out 6 tokens (saved 0%), pass 1 / fallback 0 / flag 0")
+        f"in {len(SOURCE)} codepoints -> out {len(SOURCE)} codepoints (saved 0%), pass 1 / fallback 0 / flag 0")
     empty = compress(SOURCE, max_sentences=0)
     assert compressed_text(empty) == ""
     assert summary_line(empty) == (
-        "in 6 tokens -> out 0 tokens (saved 100%), pass 0 / fallback 1 / flag 0")
+        f"in {len(SOURCE)} codepoints -> out 0 codepoints (saved 100%), pass 0 / fallback 1 / flag 0")
     fallback = compress(SOURCE, summarizer=TruncatingFakeSummarizer(), mode="anchor")
     assert summary_line(fallback).endswith("pass 0 / fallback 1 / flag 0")
     flagged = compress(SOURCE, summarizer=TruncatingFakeSummarizer(), mode="flag")
@@ -202,7 +202,7 @@ def test_text_helper_handles_empty_report():
         meaning_rule=GapRule.default_for(embedder.model_id))
     assert compressed_text(report) == ""
     assert summary_line(report) == (
-        "in 0 tokens -> out 0 tokens (saved 0%), pass 0 / fallback 0 / flag 0")
+        "in 0 codepoints -> out 0 codepoints (saved 0%), pass 0 / fallback 0 / flag 0")
 
 
 def test_import_loads_only_standard_library_and_package():

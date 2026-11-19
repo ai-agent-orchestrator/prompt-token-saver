@@ -31,8 +31,8 @@ def test_bare_command(command, capsys, tmp_path, monkeypatch):
         assert first["demo_arm"] == "TruncatingFakeSummarizer"
         assert any(check["name"] == "anchor" and not check["passed"]
                    for check in first["checks"])
-        assert first["final_text"] == "\n\n".join(
-            chunk["text"] for chunk in first["source_chunks"])
+        assert first["final_text"] == ""
+        assert any(not c["passed"] for c in first["fallback_checks"])
         assert '<article id="item-0" class="card fallback">' in board_path.read_text(
             encoding="utf-8")
         output = capsys.readouterr().out
@@ -68,8 +68,8 @@ def test_run_folder(tmp_path, capsys):
     report = json.loads((output / "report.json").read_text(encoding="utf-8"))
     assert sum(len(item["source_chunk_ids"]) for item in report["items"]) == 2
     assert report["settings"]["mode"] == "both"
-    assert report["token_counts"]["original"] == 10
-    assert "근사" in capsys.readouterr().out
+    assert report["token_counts"]["codepoints"]["original"] == sum(len(p.read_text(encoding="utf-8")) for p in inputs.glob("*") if p.suffix in (".txt", ".md"))
+    assert "코드포인트" in capsys.readouterr().out
 
 
 def test_run_multiple_files_and_options(tmp_path):
@@ -84,7 +84,7 @@ def test_run_multiple_files_and_options(tmp_path):
     report = json.loads((output / "report.json").read_text(encoding="utf-8"))
     assert report["settings"]["weight"] == 1
     assert report["settings"]["mode"] == "flag"
-    assert report["token_counts"]["original"] == 10
+    assert report["token_counts"]["codepoints"]["original"] == sum(len(p.read_text(encoding="utf-8")) for p in files)
 
 
 @pytest.mark.parametrize("options", [

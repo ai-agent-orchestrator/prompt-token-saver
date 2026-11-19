@@ -100,3 +100,33 @@ td a { color: #9fc2ff; font-size: 12px; white-space: nowrap; }
   .settings-grid label:not(.check) { font-size: 13px; }
 }
 @media (prefers-reduced-motion:reduce) { * { scroll-behavior: auto !important; } }
+
+/* Electric blue surfaces with a single Lumi yellow accent. */
+:root { --accent: #32b5ff; --line: #24415b; --panel: #101d2b; --lumi: #ffe44d; background: #080e17; }
+body { background: radial-gradient(ellipse at 50% 0, #102438 0, #080e17 65%); min-height: 100vh; }
+.pane { border: 1px solid var(--accent); border-radius: 12px; box-shadow: 0 0 0 1px #32b5ff12, 0 0 22px #009dff14; }
+.pane:focus-within { border-color: #7dd8ff; box-shadow: 0 0 0 2px #32b5ff55, 0 0 26px #009dff25; }
+.pane-heading { background: #102338; border-bottom-color: #32b5ff55; flex-wrap: wrap; }
+.pane-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.pane-heading button { border-color: #32b5ff80; background: #112c43; color: #c8eeff; }
+button:hover:not(:disabled), .file-button:hover { border-color: var(--accent); background: #1d3b54; }
+button.primary { color: #06121e; box-shadow: 0 3px 16px #009dff20; }
+button.primary:hover:not(:disabled) { background: #76d2ff; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible, a:focus-visible { outline-color: #42c7ff; }
+.small, button, .file-button, .status, .settings summary, .settings-grid label:not(.check) { font-size: 14px; }
+.pane-meta, .help, .footnote { font-size: 13px; }
+h2 { font-size: 16px; }
+.lumi { position: relative; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; margin-left: 14px; width: 32px; height: 32px; border-radius: 50%; background: var(--lumi); color: #302600; font-size: 0; box-shadow: 0 0 18px #ffe44d28; }
+.lumi::before, .lumi::after { content: ''; position: absolute; top: 11px; width: 3px; height: 4px; border-radius: 50%; background: #302600; }
+.lumi::before { left: 9px; } .lumi::after { right: 9px; }
+.lumi > span { font-size: 22px; line-height: 1; margin-top: 12px; }
+@media (max-width:760px) { .pane-heading { gap: 8px; } .pane-tools { gap: 6px; } .actions > button:not(.small) { font-size: 14px; } .lumi { margin-left: 10px; } .status, .help { font-size: 14px; } }
+
+.decision-board { margin: 18px 0; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); font-size: 14px; }
+.decision-board summary { cursor: pointer; min-height: 44px; padding: 10px 0; }
+.board-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-bottom: 16px; }
+.board-controls label { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.board-controls input { width: 130px; accent-color: var(--accent); }
+.board-candidate { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 700px; line-height: 1.8; }
+.decision-board td { vertical-align: top; }
+.decision-board th:nth-child(2) { width: auto; }

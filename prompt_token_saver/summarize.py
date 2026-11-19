@@ -98,6 +98,20 @@ class OllamaSummarizer:
         self.http = http if http is not None else _UrllibHTTP()
         self.prompt_template = prompt_template
 
+    @property
+    def model_id(self):
+        return self.model
+
+    def generate(self, prompt: str, max_chars: int) -> str:
+        """Budgeted brief adapter; output is independently checked by brief."""
+        response = self.http.post(self.base_url + "/api/generate", json={
+            "model": self.model, "prompt": prompt, "stream": False,
+            "options": {"num_predict": math.ceil(max_chars * 1.5), "temperature": 0.2},
+        })
+        if not isinstance(response, dict) or not isinstance(response.get("response"), str):
+            raise SummarizerError("Invalid local response")
+        return response["response"]
+
     def summarize(self, chunks: list[Chunk], max_sentences: int) -> Summary:
         _validate_limit(max_sentences)
         if not max_sentences or not _sentences(chunks):

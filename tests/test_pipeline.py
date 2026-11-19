@@ -45,7 +45,7 @@ def test_extractive_default_and_json(tmp_path):
     assert item.decision == "pass"
     assert item.final_text == SOURCE
     assert item.final_score == 1
-    assert report.token_counts == {"original": 6, "final": 6, "method": "공백 분리 근사"}
+    assert report.token_counts == {"codepoints": {"original": len(SOURCE), "final": len(SOURCE)}, "tokens": None}
     assert report.savings_rate == 0
     assert report.decision_counts == {"pass": 1, "flag": 0, "fallback": 0}
     assert report.settings["embedder_id"].startswith("hash-")
@@ -146,8 +146,8 @@ def test_source_embedding_batch_is_reused():
 def test_empty_documents():
     report = execute(docs={"empty": "  "})
     assert report.items == []
-    assert report.savings_rate == 0
-    assert report.token_counts["original"] == report.token_counts["final"] == 0
+    assert report.savings_rate == 1
+    assert report.token_counts == {"codepoints": {"original": 2, "final": 0}, "tokens": None}
 
 
 @pytest.mark.parametrize("options", [
@@ -178,5 +178,6 @@ def test_extractive_fallback_selects_original_sentences():
     item, = execute(BrokenSummarizer(), docs={"synthetic": source}, max_sentences=1).items
     expected = ExtractiveSummarizer(HashEmbedder()).summarize(
         [pipeline.chunk_text("synthetic", source)[0]], 1)
-    assert item.final_text == expected.text
-    assert item.final_text in source
+    assert expected.text in source
+    assert item.final_text == ""
+    assert any(not check.passed for check in item.fallback_checks)

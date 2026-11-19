@@ -3,6 +3,7 @@
 import argparse
 from dataclasses import asdict
 import json
+import sys
 from pathlib import Path
 import webbrowser
 
@@ -77,7 +78,7 @@ def _run(args):
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False)
                       + "\n", encoding="utf-8")
-    print(f"{output} (공백 분리 근사, 절감률 {report.savings_rate:.1%})")
+    print(f"{output} (코드포인트 기준 감소율 {report.savings_rate:.1%})")
     if args.board:
         board_path = output.with_name("board.html")
         render(output, board_path)
@@ -89,6 +90,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="pts", description="Prompt token saver")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     commands = parser.add_subparsers(dest="command")
+    brief_parser = commands.add_parser("brief", help="Create a brief within 300 codepoints and one third of source")
+    brief_parser.add_argument("file")
+    brief_parser.add_argument("--stage2", action="store_true")
+    brief_parser.add_argument("--model")
+    brief_parser.add_argument("--json", action="store_true")
     run_parser = commands.add_parser("run", help="Summarize and check local text files")
     run_parser.add_argument("inputs", nargs="*")
     run_parser.add_argument("--out", default="pts-out")
@@ -110,6 +116,24 @@ def main(argv: list[str] | None = None) -> int:
         args = parser.parse_args(argv)
     except SystemExit as exc:
         return int(exc.code)
+    if args.command == "brief":
+        from .api import summarize_brief
+        try:
+            text = Path(args.file).read_text(encoding="utf-8")
+            generator = OllamaSummarizer(args.model) if args.model else None
+            result = summarize_brief(text, generator=generator)
+            if args.stage2 and result["status"] == "OK":
+                result = summarize_brief(text, generator=generator, stage1=result)
+            if args.json:
+                print(json.dumps(result, ensure_ascii=False, allow_nan=False))
+            elif result["status"] == "OK":
+                print(result["body"])
+            else:
+                print(result["status"], file=sys.stderr)
+            return 0 if result["status"] == "OK" else 2
+        except (OSError, ValueError, RuntimeError, TypeError):
+            print("pts brief: cannot read source or run engine", file=sys.stderr)
+            return 2
     if args.command == "demo":
         from .demo import create_demo
 
@@ -119,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
                 if args.model is not None else None)
             print(report_path)
             print(board_path)
-            print("TruncatingFakeSummarizer: B FAIL -> fallback (full source); "
+            print("TruncatingFakeSummarizer: B FAIL -> fallback (rechecked extraction); "
                   "ExtractiveSummarizer: comparison")
             if model_failed:
                 print("Local Ollama model unavailable; offline comparison is ready. "

@@ -46,9 +46,8 @@ def test_demo_completes_offline_and_first_card_retains_source(tmp_path, monkeypa
     assert anchor["passed"] is False
     assert anchor["details"]["missing_numbers"]
     assert not re.search(r"\d", first["summary"]["text"])
-    assert first["final_text"] == "\n\n".join(chunk["text"] for chunk in first["source_chunks"])
-    assert all(number["text"] in first["final_text"]
-               for number in anchor["details"]["missing_numbers"])
+    assert first["final_text"] == ""
+    assert any(not check["passed"] for check in first["fallback_checks"])
     extracted = [item for item in report["items"] if item["demo_arm"] == "ExtractiveSummarizer"]
     assert extracted
     assert all(item["summary"]["method"] == "extractive" for item in extracted)
@@ -58,8 +57,8 @@ def test_demo_completes_offline_and_first_card_retains_source(tmp_path, monkeypa
     assert board.index("TruncatingFakeSummarizer") < board.index("ExtractiveSummarizer")
     assert 'class="missing"' in board
     assert report["decision_counts"]["fallback"] >= 1
-    assert report["token_counts"]["final"] == sum(
-        len(item["final_text"].split()) for item in report["items"])
+    assert report["token_counts"]["codepoints"]["final"] == sum(
+        len(item["final_text"]) for item in report["items"])
 
 
 def test_demo_deterministic_and_overwrites_outputs(tmp_path):

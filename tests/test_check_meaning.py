@@ -98,9 +98,10 @@ def test_coverage_uses_best_of_all_summary_sentences():
     assert all(item["max_cosine"] == pytest.approx(1) for item in result.details["coverage"])
 
 
-def test_empty_summary_passes_and_marks_all_sources_missing():
+def test_empty_summary_fails_and_marks_all_sources_missing():
     result = run([])
-    assert result.passed and result.score == 1
+    assert not result.passed and result.score == 0
+    assert result.details["reason"] == "EMPTY"
     assert result.details["sentences"] == []
     assert len(result.details["missing_core_candidates"]) == 2
     assert all(item["max_cosine"] is None for item in result.details["coverage"])
@@ -112,7 +113,7 @@ def test_no_sources_cannot_support_sentences():
     record = result.details["sentences"][0]
     assert record["top1"] is record["top2"] is record["chunk_id"] is None
     assert result.details["coverage"] == []
-    assert run([], []).passed
+    assert not run([], []).passed
 
 
 def test_search_is_scoped_to_sources_in_shared_store_without_mutation():

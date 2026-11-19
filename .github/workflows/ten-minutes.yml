@@ -12,6 +12,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
@@ -55,3 +58,19 @@ jobs:
           print(f'Installation through demo: {elapsed:.2f} seconds')
           if elapsed > 600:
               raise SystemExit('Installation through demo exceeded 600 seconds')
+
+  browser-engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/tablet
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/tablet/package-lock.json
+      - run: npm ci
+      - run: npm run check

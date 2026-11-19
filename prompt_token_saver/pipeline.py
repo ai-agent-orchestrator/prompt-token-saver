@@ -1,7 +1,7 @@
 """Group, summarize and check local documents with auditable decisions."""
 
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 import json
 import math
 from pathlib import Path
@@ -18,6 +18,7 @@ from .types import CheckResult, ItemResult
 @dataclass(frozen=True)
 class RunItem(ItemResult):
     final_score: float
+    fallback_checks: list[CheckResult] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -113,10 +114,18 @@ def run(docs: dict[str, str], *, embedder, store, summarizer, scorer,
                 decision = "pass" if passed else "flag" if mode == "flag" else "fallback"
                 final_text = (extraction.summarize(sources, max_sentences).text
                               if decision == "fallback" else summary.text)
+            fallback_checks = []
+            if decision == "fallback":
+                fallback = extraction.summarize(sources, max_sentences)
+                a_future = executor.submit(check_meaning, fallback, sources, store, cached, meaning_rule)
+                b_future = executor.submit(lambda: check_anchors(fallback, extract_anchors(
+                    scorer.score("\n\n".join(chunk.text for chunk in sources)))))
+                fallback_checks = [a_future.result(), b_future.result()]
+                final_text = fallback.text if all(check.passed for check in fallback_checks) else ""
             items.append(RunItem(group.id, group.chunk_ids, summary, checks,
-                                 decision, final_text, score))
-    original = sum(len(text.split()) for text in docs.values())
-    final = sum(len(item.final_text.split()) for item in items)
+                                 decision, final_text, score, fallback_checks))
+    original = sum(len(text) for text in docs.values())
+    final = sum(len(item.final_text) for item in items)
     return RunReport(
         items=items,
         settings={"mode": mode, "weight": weight,
@@ -124,8 +133,7 @@ def run(docs: dict[str, str], *, embedder, store, summarizer, scorer,
                   "threshold_version": meaning_rule.version,
                   "embedder_id": embedder.model_id, "scorer_id": _identifier(scorer),
                   "group_threshold": group_threshold, "max_sentences": max_sentences},
-        token_counts={"original": original, "final": final,
-                      "method": "공백 분리 근사"},
+        token_counts={"codepoints": {"original": original, "final": final}, "tokens": None},
         savings_rate=1 - final / original if original else 0.0,
         decision_counts={name: sum(item.decision == name for item in items)
                          for name in ("pass", "flag", "fallback")},

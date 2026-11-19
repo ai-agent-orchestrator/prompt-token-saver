@@ -72,9 +72,6 @@ def create_demo(out: str | Path = "pts-demo", *, summarizer=None) -> tuple[Path,
             item["group_id"] = f"{label} / {item['group_id']}"
             item["summary"]["group_id"] = item["group_id"]
             item["demo_arm"] = label
-            if label == "TruncatingFakeSummarizer" and any(
-                    check.name == "anchor" and not check.passed for check in result.checks):
-                item["final_text"] = source_text
             if label == "OllamaSummarizer" and any(
                     check.name == "summarizer" for check in result.checks):
                 model_failed = True
@@ -88,16 +85,16 @@ def create_demo(out: str | Path = "pts-demo", *, summarizer=None) -> tuple[Path,
         if model_failed:
             break
     data = asdict(reports[0])
-    original = sum(report.token_counts["original"] for report in reports)
-    final = sum(len(item["final_text"].split()) for item in items)
+    original = sum(report.token_counts["codepoints"]["original"] for report in reports)
+    final = sum(len(item["final_text"]) for item in items)
     data.update(items=items,
-                token_counts={**data["token_counts"], "original": original, "final": final},
+                token_counts={"codepoints": {"original": original, "final": final}, "tokens": None},
                 savings_rate=1 - final / original if original else 0.0,
                 decision_counts={name: sum(item["decision"] == name for item in items)
                                  for name in ("pass", "flag", "fallback")})
     data["settings"].update(
         demo_arms=[label for label, _ in arms],
-        demo_fallback="Full source on broken-arm B failure",
+        demo_fallback="Rechecked extraction, or empty on failed fallback",
         demo_counts="Source counts repeat once per comparison arm",
     )
     output = Path(out)

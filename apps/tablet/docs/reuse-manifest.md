@@ -30,7 +30,7 @@ upstream의 공개 진입점은 `compress(docs, mode, weight, max_sentences, gro
 
 | upstream 고정 커밋의 경로 | 조사한 동작 | 이번 브라우저 구현 | 동일 구현 여부 |
 |---|---|---|---|
-| `prompt_token_saver/api.py`, `pipeline.py` | 부품 주입, 묶기→요약→검사, 후보와 최종 출력 분리 | [research.js](../src/core/research.js)의 `analyzeResearch`와 별도 `BrowserGenerator`, 카드별 검사·실패 표시 | 구조적 설계 참고. Python `compress`를 호출하지 않고 `RunReport`와도 다른 앱 스키마 사용 |
+| `prompt_token_saver/api.py`, `pipeline.py` | 부품 주입, 묶기→요약→검사, 후보와 최종 출력 분리 | [Brief 엔진](../src/core/summary/engine.js)과 별도 `BrowserGenerator`, A/B/C 검사·실패 표시 | 구조적 설계 참고. Python `compress`를 호출하지 않고 `RunReport`와도 다른 앱 스키마 사용 |
 | `types.py`, `text.py` | 원문 `Chunk.start/end` 좌표, 원문 문장 보존 | 코드포인트 span과 별도 UTF-16 변환, Google 탭/segment 좌표 연결 | 보존 계약 참고. 문장 분할은 `Intl.Segmenter` 기반이므로 Python 정규식과 결과가 같다고 보장하지 않음 |
 | `group.py`, `embed.py` | 임베딩 코사인 기반 average-link 군집화 | 제목·일반 단어 겹침으로 맥락 후보를 묶음 | 새 단순 알고리즘. 벡터 의미 군집화·Chroma·검색은 이번 구현에 없음 |
 | `summarize.py`의 `ExtractiveSummarizer` | 문장 임베딩의 평균 코사인으로 순위, 입력 순서로 복원 | 보호할 수치/조건·경계 사실과 단어 빈도로 문장 선택 | 새 알고리즘. upstream 추출 요약기와의 parity 검증 없음 |

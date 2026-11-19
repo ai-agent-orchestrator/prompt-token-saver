@@ -77,6 +77,8 @@ def render(report_json_path, out_html_path):
     """Write one UTF-8 HTML file. Never read source paths from a report."""
     raw = Path(report_json_path).read_text(encoding="utf-8")
     report = json.loads(raw)
+    if isinstance(report, dict) and report.get("schema") == "pts.summary/v1":
+        return render_brief(report, out_html_path)
     if not isinstance(report, dict) or not isinstance(report.get("items"), list):
         raise ValueError("Report must contain an items list")
     items, settings = report["items"], report.get("settings", {})
@@ -238,3 +240,31 @@ document.getElementById("export").addEventListener("click", () => {
 });
 refresh();
 '''
+
+
+def render_brief(result, out_html_path):
+    """Render the separate brief audit report, never treating it as body."""
+    from .brief import assert_result
+    assert_result(result)
+    report = result["report"]
+    rows = []
+    for group in report["groups"]:
+        candidates = []
+        for attempt in group["attempts"]:
+            checks = " · ".join(f"{escape(name)}: {escape(str(check.get('result')))} / {escape(str(check.get('reason') or ''))}" for name, check in attempt["checks"].items())
+            candidates.append(f"<details><summary>{escape(attempt['method'])} / {escape(attempt['decision'])}</summary><pre>{escape(attempt['candidate'])}</pre><p>{checks}</p></details>")
+        rows.append(f"<tr><td>{escape(group['title'])}<br>{group['weight']:.3f} / {group['budget']}자</td><td>{''.join(candidates)}</td><td>{escape(group['status'])}</td></tr>")
+    omitted = "".join(f"<li>{escape(a['sentenceId'])}: {escape(a['text'])} ({escape(a['reason'])})</li>" for a in report["omittedAnchors"])
+    data = json.dumps(report, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+    html = f"""<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Brief 판정 보드</title>
+<style>body{{background:#08111c;color:#dfefff;font:16px system-ui;margin:24px}}main{{max-width:1200px;margin:auto}}table{{width:100%;border-collapse:collapse}}td,th{{padding:14px;border:1px solid #32b5ff;text-align:left;vertical-align:top}}pre{{white-space:pre-wrap;overflow-wrap:anywhere}}details{{padding:10px}}input{{min-height:44px}}</style><main>
+<h1>Brief 판정 보드</h1><p>{escape(result['status'])} · {result['metrics']['bodyCodepoints']}자 / 상한 {result['metrics']['budget']}자</p><pre>{escape(result['body'])}</pre>
+<p>{escape(report['engine']['version'])} · {escape(report['engine']['constantsVersion'])} · 모델 {escape(str(report['engine']['generatorId']))} · 임계값 보정 전</p>
+<label>미리보기 문턱값 <input id="threshold" type="range" min="0" max="1" step="0.01" value="0.75"></label><p id="preview">저장된 후보만 재판정합니다. 본문은 바뀌지 않습니다. 실제 재실행: pts brief FILE --json</p>
+<table><thead><tr><th>주제 / 가중치 / 예산</th><th>후보와 검사 A·B·C</th><th>최종 상태</th></tr></thead><tbody>{''.join(rows)}</tbody></table><details><summary>누락 앵커 {len(report['omittedAnchors'])}개 · 누락 그룹 {len(report['omittedGroups'])}개</summary><ul>{omitted}</ul></details>
+<script type="application/json" id="audit">{data}</script>
+<script>const report=JSON.parse(document.getElementById('audit').textContent);document.getElementById('threshold').addEventListener('input',event=>{{let total=0,pass=0;for(const g of report.groups)for(const a of g.attempts){{if(a.decision==='error')continue;total++;const m=a.checks.meaning;const valid=(!m.reason||m.reason==='LOW_CONTAINMENT')&&m.matches.length&&m.matches.every(x=>x.score>=Number(event.target.value));if(valid&&a.checks.anchor.result==='PASS'&&a.checks.length.result==='PASS')pass++;}}document.getElementById('preview').textContent=`미리보기(본문 변경 없음): ${{total}}개 후보 중 ${{pass}}개 통과. 실제 재실행: pts brief FILE --json`;}});</script></main></html>"""
+    path = Path(out_html_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(html, encoding="utf-8")
+    return path

@@ -1,0 +1,9 @@
+{
+  "id": "short59",
+  "source": "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가",
+  "expect": {
+    "status": "SOURCE_TOO_SHORT",
+    "maxBody": 0,
+    "deterministicBody": ""
+  }
+}

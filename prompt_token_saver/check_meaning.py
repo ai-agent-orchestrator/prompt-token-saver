@@ -102,9 +102,9 @@ def check_meaning(summary: Summary, source_chunks: list[Chunk], store: VectorSto
         coverage.append({"chunk_id": chunk.id, "max_cosine": best,
                          "missing": best is None or best < rule.coverage_min})
     return CheckResult(
-        name="meaning", passed=not unsupported,
-        score=1.0 - len(unsupported) / len(records) if records else 1.0,
-        details={"rule": asdict(rule), "model_id": embedder.model_id,
+        name="meaning", passed=bool(records) and not unsupported,
+        score=1.0 - len(unsupported) / len(records) if records else 0.0,
+        details={"reason": None if records else "EMPTY", "rule": asdict(rule), "model_id": embedder.model_id,
                  "sentences": records, "unsupported_sentences": unsupported,
                  "coverage": coverage,
                  "missing_core_candidates": [item for item in coverage if item["missing"]]},

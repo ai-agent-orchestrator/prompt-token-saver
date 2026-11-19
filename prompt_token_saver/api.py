@@ -12,7 +12,7 @@ from .surprise import IdfScorer
 def compress(docs: dict[str, str] | str, *, mode="both", weight=0.5,
              max_sentences=3, group_threshold=0.55, embedder=None, store=None,
              summarizer=None, scorer=None, meaning_rule=None) -> RunReport:
-    """Run the pipeline with local defaults; reject empty or blank input.
+    """Legacy pipeline without a global length budget; prefer summarize_brief.
 
     A single string uses document ID ``doc-1``. Only components set to None
     are replaced. Custom embedding models may need an explicit GapRule.
@@ -50,12 +50,20 @@ def compressed_text(report: RunReport) -> str:
 
 
 def summary_line(report: RunReport) -> str:
-    """Format approximate token counts, rounded savings and decisions for logs."""
+    """Format measured codepoints and decisions; no token estimate."""
     return (
-        f"in {report.token_counts['original']} tokens -> "
-        f"out {report.token_counts['final']} tokens "
+        f"in {report.token_counts['codepoints']['original']} codepoints -> "
+        f"out {report.token_counts['codepoints']['final']} codepoints "
         f"(saved {report.savings_rate:.0%}), "
         f"pass {report.decision_counts['pass']} / "
         f"fallback {report.decision_counts['fallback']} / "
         f"flag {report.decision_counts['flag']}"
     )
+
+
+def summarize_brief(text, *, generator=None, stage1=None, **kwargs):
+    """Return pts.summary/v1; only status OK has a nonempty, budgeted body."""
+    from .brief import summarize, refine
+    if stage1 is not None:
+        return refine(stage1, text=text, generator=generator, **kwargs)
+    return summarize(text, generator=generator, **kwargs)

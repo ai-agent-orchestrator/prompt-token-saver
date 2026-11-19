@@ -9,7 +9,8 @@ from .types import Chunk, Group
 
 
 def group_chunks(chunks: list[Chunk], vectors: list[list[float]],
-                 threshold: float = 0.55, min_size: int = 1) -> list[Group]:
+                 threshold: float = 0.55, min_size: int = 1,
+                 max_group_chars: int = 1200) -> list[Group]:
     """Merge the closest groups while average cosine meets threshold.
 
     Input order defines source order. Ties favor the earliest groups. Groups
@@ -18,6 +19,8 @@ def group_chunks(chunks: list[Chunk], vectors: list[list[float]],
     """
     if not math.isfinite(threshold) or not -1.0 <= threshold <= 1.0:
         raise ValueError("threshold must be finite and between -1 and 1")
+    if isinstance(max_group_chars, bool) or not isinstance(max_group_chars, int) or max_group_chars < 1:
+        raise ValueError("max_group_chars must be a positive integer")
     if isinstance(min_size, bool) or not isinstance(min_size, int) or min_size < 1:
         raise ValueError("min_size must be a positive integer")
     if len(chunks) != len(vectors):
@@ -35,6 +38,8 @@ def group_chunks(chunks: list[Chunk], vectors: list[list[float]],
         for i, left in enumerate(clusters):
             for j in range(i + 1, len(clusters)):
                 right = clusters[j]
+                if sum(len(chunks[k].text) for k in left + right) + len(left) + len(right) - 1 > max_group_chars:
+                    continue
                 score = math.fsum(similarities[min(a, b), max(a, b)]
                                   for a in left for b in right) / (len(left) * len(right))
                 if score > best_score:

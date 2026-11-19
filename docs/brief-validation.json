@@ -1,0 +1,39 @@
+{
+  "engine": "brief-1.0.0",
+  "date": "2026-11-19",
+  "jsTests": 71,
+  "pythonTests": 335,
+  "modelQuality": "NOT_MEASURED",
+  "records": [
+    {
+      "id": "notes-ko",
+      "sourceCodepoints": 609,
+      "budget": 203,
+      "firstStatus": "OK",
+      "firstBodyCodepoints": 114,
+      "secondStatus": "OK",
+      "secondBodyCodepoints": 76,
+      "firstElapsedMs": 10.65
+    },
+    {
+      "id": "synthetic",
+      "sourceCodepoints": 52593,
+      "budget": 300,
+      "firstStatus": "OK",
+      "firstBodyCodepoints": 284,
+      "secondStatus": "OK",
+      "secondBodyCodepoints": 157,
+      "firstElapsedMs": 106.68
+    },
+    {
+      "id": "user-source-local-only",
+      "sourceCodepoints": 1006,
+      "budget": 300,
+      "firstStatus": "OK",
+      "firstBodyCodepoints": 221,
+      "secondStatus": "OK",
+      "secondBodyCodepoints": 91,
+      "firstElapsedMs": 2.6
+    }
+  ]
+}
