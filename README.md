@@ -1,57 +1,130 @@
-# prompt-token-saver
+# prompt token saver : 토큰을 아끼세요
 
-**Save tokens on every prompt — without dropping a single fact.**
-Free. Local. Ten minutes to try.
+**v0.1.0-beta.1 · Serverless · Tablet / Mobile · Dark Mode**
 
-[한국어](README.ko.md)
+[한국어](README.ko.md) · [English](README.en.md)
 
-![prompt-token-saver](assets/hero.png)
-<sub>Numbers in the diagram are an illustration. Measured results ship with the first release.</sub>
+## 1층: 초경량 에지 — 무료·서버리스
 
-> 🚧 **Building in public.** First release coming soon. Star or watch to get it.
+| 항목 | 내용 |
+|---|---|
+| **존재 이유** | 언제 어디서든 **돈과 발열 걱정 없이** 생각을 모으고 다듬는 가장 가벼운 전초기지. |
+| **비용 구조** | **유지비·API 비용 0원** — 무료 정적 호스팅 + 온디바이스 연산. |
+| **핵심 구성** | **태블릿 + GitHub Pages + LiteRT-LM (`Gemma`) + 브라우저 유사도 검색** |
+| **주요 임무** | • 이동 중 아이디어·리서치 메모 수집<br>• 놀람성 지표 기반 핵심 프롬프트 압축 요약<br>• 로컬 벡터 기반 즉각 검색 및 GitHub 백업 |
 
-## The problem
+이 표는 **제품의 핵심 역할과 개발 방향**입니다. 발열·배터리 부담을 줄이는 것을 목표로 하며 발열 0을 보장하지 않습니다. 비용 0원은 무료 호스팅 범위와 온디바이스 처리 기준의 서비스 운영·추론 API 비용을 뜻합니다.
 
-Small local models summarize for free — and quietly drop the one thing you needed.
+| 현재 Beta의 실제 상태 | 구분 |
+|---|---|
+| 원문·메모 입력, 요약 1, 필터 요약 2, 복사, Drive 커넥터·목록 | 구현. Drive 없이 두 요약·복사 검수 완료. 실계정 Drive 검수는 별도 |
+| LiteRT-LM / Gemma | 호환 로컬 모델 파일용 어댑터 구현. 실제 Gemma·태블릿 GPU 검수 전 |
+| 실제 놀람성 점수 `−log p(token)` | 구현 전. 현재 규칙 기반 보호·발췌를 놀람성 실측이라고 부르지 않음 |
+| 브라우저 로컬 임베딩·벡터 유사도 검색 | 구현 예정 |
+| GitHub의 사용자 자료 백업 | 명시적 opt-in 후속 기능. 현재 GitHub에는 앱 코드만 저장하며 개인 원문을 자동 커밋하지 않음 |
 
-> "Q3 revenue grew **12%** to **₩4.1B**, *except* the export division."
-> → small model: "Revenue grew in Q3." 😐
+긴 프롬프트나 1차 리서치 자료를 붙여넣고, 두 번 정리한 뒤 Google Drive에 저장하는 무료 웹 앱입니다. **화면 하나에서 끝냅니다.**
 
-Prompt compressors that just delete words have the same problem: shorter, but wrong.
+```text
+원문 붙여넣기 → 요약하기 1 → 필터로 요약하기 2 → Google Drive 저장
+                                                  ↓
+                                            저장 목록에서 열기
+```
 
-## The idea
+추가 AI 작업은 결과를 복사해 Gemini·Codex·Claude 등 원하는 서비스에서 직접 합니다. 앱에 유료 AI API나 결제를 연결하지 않습니다.
 
-**The words a model can't guess are the words that carry information.**
-"The weather is really ___" — easy, safe to drop. "Rates moved to ___ %" — impossible to guess, must stay.
+## 화면
 
-So every summary is checked twice, in parallel, before it reaches your paid AI:
+![Dark-mode Tablet Beta — actual browser view](docs/images/beta-dark-tablet.jpg)
 
-| Check | Asks | Catches |
-| --- | --- | --- |
-| 🔎 **Meaning** | Is every summary sentence grounded in the source? | made-up sentences, topic drift |
-| 🎯 **Surprise** | Are the hard-to-guess words (numbers, names) still there? | dropped facts |
+제목은 **prompt token saver : 토큰을 아끼세요**. 소개 화면·사이드바·대시보드 없이 다크 모드 작업 화면만 제공합니다.
 
-Fail either check → fall back to the original sentences. **Never worse than the source.**
+| 원문 붙여넣기 | 요약 1 | 요약 2 |
+|---|---|---|
+| 프롬프트·리서치 원문 | 첫 번째 요약 · 복사 | 필터를 한 번 더 거친 결과 · 복사 |
 
-## What you get
+아래에는 실행·Drive 저장 버튼과 저장 목록표를 둡니다. 태블릿 가로에서는 세 칸을 나란히, 모바일·좁은 세로 화면에서는 위아래로 배치합니다. 연결 설정과 개인정보 가리기는 접힌 설정 안에 둡니다.
 
-- Notes grouped by topic, summarized one topic at a time (small models do better on short inputs)
-- Two parallel checks, with an extractive fallback
-- A board to see every decision and tune the thresholds by eye
-- Runs on your PC. No API key, no sign-up, no cost
+## 사용하는 순서
 
-## Status
+### 먼저 Drive 없이 써보기
 
-| | |
-| --- | --- |
-| Engine | 🛠 in progress |
-| Demo (`3 commands, no GPU`) | 🛠 in progress |
-| Measured results | ⏳ will be published with the first release — no numbers until they are measured |
+**Google 로그인·Drive 연결·모델 파일 없이도 요약 1, 요약 2, 결과 복사가 동작합니다.** 설정을 먼저 채울 필요가 없습니다.
 
-## Credits
+1. 앱을 열고 **예제**를 누르거나 원문을 붙여넣습니다.
+2. **요약하기 1**을 누르고 가운데 결과를 확인합니다.
+3. **필터로 요약하기 2**를 누르고 오른쪽 결과와 분량을 비교합니다.
+4. 각 요약의 **복사**를 눌러 원하는 곳에 붙여넣습니다.
 
-Builds on ideas from [LLMLingua](https://github.com/microsoft/LLMLingua) (Microsoft, MIT) — token surprisal as a signal of information. Third-party notices: [NOTICE.md](NOTICE.md).
+여기까지가 Drive 없이 쓰는 기본 경로입니다. Google 연결이 없어도 요약을 막지 않습니다. Drive 저장과 원격 목록 조회를 선택할 때만 Google 연결이 필요합니다.
 
-## License
+### Drive까지 연결해서 써보기
 
-[MIT](LICENSE)
+1. 원문을 붙여넣습니다. 텍스트 파일이나 선택한 Drive Google 문서도 가져올 수 있습니다.
+2. **요약하기 1**을 누릅니다. 전체 자료를 읽고 맥락별로 원문 근거를 골라 정리합니다.
+3. **필터로 요약하기 2**를 누릅니다. 요약 1이 선택한 근거를 다시 필터링합니다. 보호할 수치·조건·부정은 남깁니다.
+4. 원하는 결과를 **복사**하거나 **Google Drive에 저장**합니다. 요약 2가 있으면 요약 2를 저장하고, 없으면 요약 1을 저장합니다.
+5. **저장 목록**에서 이 앱이 만든 Drive 폴더를 불러와 엽니다.
+
+30~40쪽의 1차 리서치를 전체 약 5~10쪽으로 줄이는 것을 목표로 합니다. 분량은 자료에 따라 달라집니다. 내부 기준 1쪽은 공백 포함 1,500자이며 실제 인쇄 쪽수·토큰 수와는 다릅니다. 중요한 근거 때문에 더 줄일 수 없으면 그 상태를 표시합니다.
+
+## 서버 없이 동작하는 방식
+
+- GitHub Pages 등 정적 호스팅은 앱 파일만 제공합니다. **요약 처리는 사용자의 브라우저에서 실행**합니다.
+- 기본 기능은 모델 다운로드 없이 사용하는 원문 발췌·규칙 필터입니다. 두 번째 필터는 원래 근거 장부를 유지하므로 새 문장이나 숫자를 만들지 않습니다.
+- 입력·요약을 개발자 서버나 GitHub 저장소에 올리지 않습니다. Drive 읽기·쓰기는 로그인과 사용자 선택 후 실행합니다.
+- 브라우저 작업을 기기에 보관하는 것은 선택입니다. Google 로그인 토큰은 탭 메모리에만 유지합니다.
+- Drive 연결·저장은 인터넷이 필요합니다. 앱 자산이 준비된 뒤의 로컬 처리는 네트워크 연결과 구분합니다.
+
+선택 로컬 AI 어댑터는 별도로 포함되어 있습니다. 호환 `.litertlm` 파일을 직접 선택할 때만 사용하며, 기본 화면이나 요약에 필수는 아닙니다. 현재 AI 경로는 근거 선택과 원문 발췌이며 자유로운 의역 요약이나 의미 검증 완료를 주장하지 않습니다.
+
+## 오늘 사용할 Beta
+
+**이 버전은 검수용 Beta입니다.** 기본 처리·복사·저장 장부와 가짜 Google/모델 경로를 테스트했습니다. 실제 Google 계정의 연결·저장·목록, 실제 태블릿의 GPU 추론과 GitHub Pages 배포는 별도 실사용 검수가 필요합니다.
+
+| 오늘 확인할 것 | 확인 방법 |
+|---|---|
+| 다크 모드·태블릿/모바일 배치 | 원문·두 요약·저장 목록을 한 화면에서 사용 |
+| 요약 1 → 요약 2 | 합성 예제나 공개 자료로 두 번 처리하고 분량·누락 비교 |
+| 수치·조건·마지막 부분 | 줄어든 결과와 원문을 나란히 대조 |
+| 결과 복사 | 원하는 AI 서비스 입력창에 붙여넣기 |
+| Drive 저장·목록 | 연결 설정 후 저장, 목록 새로고침, 다른 기기에서 열기 |
+
+먼저 Drive 없이 검수한 뒤, 운영자 Google 설정을 구성했을 때만 저장·목록을 추가 검수합니다. 연결을 생략하거나 실패해도 이미 만든 요약은 유지되어야 합니다. [오늘의 검수 순서와 기록표](docs/BETA_CHECKLIST.md)를 사용합니다.
+
+초기 Beta 검수에는 합성 예제나 공개 자료를 사용하세요. 현실의 사실 여부는 별도로 확인해야 하며, 규칙 검사 통과가 사실 보존 전체의 보증은 아닙니다.
+
+2026-11-19의 Drive 미연결 브라우저 검수: 합성 원문 **52,593자 → 요약 1 8,202자 → 요약 2 7,377자**, 마지막 조건 보존과 복사 일치 확인. 1024px 태블릿·390px 모바일 폭에서 가로 넘침 없이 표시됨을 확인했습니다. 실제 기기·모델 품질 검증과는 구분합니다.
+
+## 실행
+
+개발용 Node.js 24:
+
+```sh
+git clone --branch claude/tablet-token-saver-2026-11-19 https://github.com/ai-agent-orchestrator/prompt-token-saver.git
+cd prompt-token-saver
+cd apps/tablet
+npm ci
+npm run dev
+```
+
+터미널에 표시된 Local 주소를 **개발 PC의 브라우저**에서 엽니다. Google 설정은 비워 둔 채 예제로 시작하면 됩니다. 태블릿·모바일에서 어디서나 열 주소는 정적 호스팅 배포 후의 HTTPS 주소이며, 소스 push만으로 사이트가 배포되지는 않습니다.
+
+배포된 앱의 이용자는 Node.js나 개발 서버가 필요하지 않습니다.
+
+```sh
+npm run check
+npm run build
+```
+
+`dist/`가 정적 배포물입니다. [GitHub Pages 수동 배포 workflow](.github/workflows/tablet-pages.yml)를 포함했으며, push만으로 자동 배포하지 않습니다. Drive를 제공하려면 운영자가 Google Cloud의 공개 설정 세 가지를 한 번 구성해야 합니다. 방문자는 자기 계정으로 선택한 문서만 사용합니다.
+
+- [앱 실행·Google 연결·배포 안내](apps/tablet/README.md)
+- [다크 모드 Tablet / Mobile Beta 개발안](docs/TABLET_MOBILE_BETA_PLAN.md)
+- [엔진 재사용 범위와 라이선스](apps/tablet/docs/reuse-manifest.md)
+
+기존 Python 엔진은 저장소에 유지합니다. 이번 기본 제품은 `apps/tablet/`의 브라우저 앱이며, 이전 PC 엔진의 의미 검사·품질과 동등하다고 주장하지 않습니다.
+
+## 라이선스
+
+[MIT](LICENSE). 선택 SDK의 Apache-2.0 고지는 앱의 `licenses/`와 빌드 자산에 포함합니다. [Third-party notices](NOTICE.md).

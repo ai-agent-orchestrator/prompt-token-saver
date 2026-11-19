@@ -1,0 +1,12 @@
+{
+  "id": "./",
+  "name": "prompt token saver : 토큰을 아끼세요",
+  "short_name": "token saver",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1017",
+  "theme_color": "#0b1017",
+  "icons": [{ "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
