@@ -116,11 +116,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .small, button, .file-button, .status, .settings summary, .settings-grid label:not(.check) { font-size: 14px; }
 .pane-meta, .help, .footnote { font-size: 13px; }
 h2 { font-size: 16px; }
-.lumi { position: relative; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; margin-left: 14px; width: 32px; height: 32px; border-radius: 50%; background: var(--lumi); color: #302600; font-size: 0; box-shadow: 0 0 18px #ffe44d28; }
-.lumi::before, .lumi::after { content: ''; position: absolute; top: 11px; width: 3px; height: 4px; border-radius: 50%; background: #302600; }
-.lumi::before { left: 9px; } .lumi::after { right: 9px; }
-.lumi > span { font-size: 22px; line-height: 1; margin-top: 12px; }
-@media (max-width:760px) { .pane-heading { gap: 8px; } .pane-tools { gap: 6px; } .actions > button:not(.small) { font-size: 14px; } .lumi { margin-left: 10px; } .status, .help { font-size: 14px; } }
+.lumi { display: inline-block; vertical-align: middle; margin-left: 14px; width: 76px; height: 81px; object-fit: contain; filter: drop-shadow(0 0 12px #ffe44d25); }
+@media (max-width:760px) { .pane-heading { gap: 8px; } .pane-tools { gap: 6px; } .actions > button:not(.small) { font-size: 14px; } .lumi { margin-left: 10px; width: 62px; height: 66px; } .status, .help { font-size: 14px; } }
 
 .decision-board { margin: 18px 0; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); font-size: 14px; }
 .decision-board summary { cursor: pointer; min-height: 44px; padding: 10px 0; }

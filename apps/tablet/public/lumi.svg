@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 128" fill="none">
+  <title>루미 노랑이</title>
+  <defs>
+    <linearGradient id="body" x1="36" y1="29" x2="80" y2="103" gradientUnits="userSpaceOnUse"><stop stop-color="#FFF798"/><stop offset=".5" stop-color="#FFE44D"/><stop offset="1" stop-color="#FFC73B"/></linearGradient>
+  </defs>
+  <ellipse cx="59" cy="119" rx="29" ry="4" fill="#32B5FF" opacity=".13"/>
+  <path d="M41 100c-7 3-9 13-3 15 6 2 12-6 13-12M66 104c2 8 9 13 14 9 5-4 0-11-6-13" fill="#FFD13E" stroke="#56401E" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M29 68c-10-2-16 4-17 10-1 5 6 8 10 4l8-7M86 65c8-1 10-7 12-12 2-6 9-5 10 0 1 7-4 18-15 23" fill="#FFE44D" stroke="#56401E" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M94 42l1-7m10 10 6-4m-5 14 7 1" stroke="#FFE978" stroke-width="3" stroke-linecap="round"/>
+  <path d="M58 23c-22 0-36 18-36 42 0 28 13 44 36 44 25 0 37-17 37-44 0-24-14-42-37-42Z" fill="url(#body)" stroke="#56401E" stroke-width="2.5"/>
+  <path d="M43 34c-7 4-11 11-12 18" stroke="#FFFBCB" stroke-width="5" stroke-linecap="round"/>
+  <path d="M57 23c-6-6-6-13 0-14 5-1 9 6 6 11" fill="#FFE44D" stroke="#56401E" stroke-width="2.5" stroke-linecap="round"/>
+  <ellipse cx="45" cy="64" rx="4" ry="5.5" fill="#293044"/>
+  <ellipse cx="72" cy="64" rx="4" ry="5.5" fill="#293044"/>
+  <circle cx="46" cy="62" r="1.3" fill="white"/><circle cx="73" cy="62" r="1.3" fill="white"/>
+  <ellipse cx="35" cy="75" rx="6" ry="3.5" fill="#FFAD6F" opacity=".8"/>
+  <ellipse cx="82" cy="75" rx="6" ry="3.5" fill="#FFAD6F" opacity=".8"/>
+  <path d="M51 77c3 6 11 6 15 0" stroke="#56401E" stroke-width="3" stroke-linecap="round"/>
+  <path d="m59 91 2 4 4 .6-3 3 .8 4.4-3.8-2-3.8 2 .7-4.4-3.1-3 4.4-.6Z" fill="#32B5FF"/>
+</svg>
