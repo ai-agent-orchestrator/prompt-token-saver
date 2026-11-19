@@ -147,7 +147,13 @@ function maskingReady() {
 async function copySummary(stage) {
   if (!maskingReady()) return;
   try { await navigator.clipboard.writeText(summary(stage === 1 ? state.first : state.second)); message(`요약 ${stage}를 복사했습니다. Gemini·Codex·Claude 등 원하는 서비스에 붙여넣으세요.`); }
-  catch { message('자동 복사를 사용할 수 없습니다. 요약칸의 글을 직접 선택해 복사해 주세요.', true); }
+  catch {
+    const field = $(`#summary-${stage}`);
+    field.focus(); field.select(); field.setSelectionRange(0, field.value.length);
+    let copied = false;
+    try { copied = document.execCommand('copy'); } catch { /* Leave the result selected for native mobile copy. */ }
+    message(copied ? '결과를 복사했습니다.' : '요약을 전체 선택했습니다. 길게 눌러 복사 메뉴를 사용해 주세요.', !copied);
+  }
 }
 
 function configured() {
