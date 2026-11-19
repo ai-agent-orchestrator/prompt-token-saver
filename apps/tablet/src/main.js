@@ -58,7 +58,7 @@ function render() {
   const locked = state.busy ? 'disabled' : '';
   $('#app').innerHTML = `<main><header><h1>prompt token saver <span>: 토큰을 아끼세요</span><sup class="beta">Beta · Brief 1.0</sup><span class="lumi" role="img" aria-label="노란 루미">●<span aria-hidden="true">˘</span></span></h1><button class="small" id="demo" ${locked}>예제</button></header>
     <div class="document-row"><label for="title">제목</label><input id="title" value="${esc(state.title)}" maxlength="160" placeholder="저장할 문서 제목" ${locked}/><button class="small" id="drive-input" ${locked}>Drive에서 가져오기</button><label class="file-button">파일<input type="file" id="source-file" accept=".txt,.md,text/plain,text/markdown" hidden ${locked}/></label></div>
-    <div class="panes"><section class="pane"><div class="pane-heading"><h2>원문 붙여넣기</h2><div class="pane-tools"><button class="small" id="copy-source" ${locked}>복사</button><button class="small" id="paste-source" ${locked}>붙여넣기</button></div></div><textarea id="source" aria-label="요약할 원문" placeholder="요약할 프롬프트나 리서치 내용을 그대로 붙여넣으세요." ${locked}>${esc(state.text)}</textarea><div class="pane-meta" id="source-count">${format(length(state.text))}자 · 약 ${format(length(state.text) / 1500)}쪽</div></section>${resultPane(state.first, 1)}${resultPane(state.second, 2)}</div>
+    <div class="panes"><section class="pane"><div class="pane-heading"><h2>원문 붙여넣기</h2><div class="pane-tools"><button class="small" id="copy-source" ${locked}>복사</button><button class="small" id="paste-source" ${locked}>붙여넣기</button><button class="small" id="clear-source" ${locked}>전체 지우기</button></div></div><textarea id="source" aria-label="요약할 원문" placeholder="요약할 프롬프트나 리서치 내용을 그대로 붙여넣으세요." ${locked}>${esc(state.text)}</textarea><div class="pane-meta" id="source-count">${format(length(state.text))}자 · 약 ${format(length(state.text) / 1500)}쪽</div></section>${resultPane(state.first, 1)}${resultPane(state.second, 2)}</div>
     <div class="actions"><button class="primary" id="summarize-first" ${locked}>요약하기 1</button><span class="action-arrow" aria-hidden="true">→</span><button class="primary" id="summarize-second" ${state.first?.status !== 'OK' || state.dirty || state.busy ? 'disabled' : ''}>필터로 요약하기 2</button><span class="action-arrow" aria-hidden="true">→</span><button id="drive-save" ${!currentRun() || state.dirty || state.busy ? 'disabled' : ''}>Google Drive에 저장</button>${state.busy && controller ? '<button class="small" id="cancel">중단</button>' : ''}</div>
     <p id="status" class="status ${state.error ? 'error' : ''}" role="status" aria-live="polite">${esc(state.message || '요약은 300자·원문 1/3 이하입니다. 선택한 문장의 관계를 검사하며 빠진 내용은 판정 보드에서 확인하세요.')}</p>
     ${state.maskReview ? '<p class="warning">복구한 작업의 개인 단어 가리기를 설정에서 확인한 뒤 복사·저장해 주세요.</p>' : ''}
@@ -78,6 +78,14 @@ function bind() {
   $('#source').addEventListener('input', event => { state.text = event.target.value; state.source = {}; state.unsupported = 0; state.warnings = []; markDirty(); $('#source-count').textContent = `${format(length(state.text))}자 · 약 ${format(length(state.text) / 1500)}쪽`; });
   $('#copy-source').addEventListener('click', copySource);
   $('#paste-source').addEventListener('click', pasteSource);
+  $('#clear-source').addEventListener('click', () => {
+    if (state.busy) return;
+    const field = $('#source');
+    field.value = '';
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.focus();
+    message('원문을 모두 지웠습니다. 새 원문을 붙여넣고 요약하기 1을 실행해 주세요.');
+  });
   $('#summarize-first').addEventListener('click', () => process(1));
   $('#summarize-second').addEventListener('click', () => process(2));
   $('#cancel')?.addEventListener('click', () => { controller?.abort(); generator?.cancel(); message('중단 요청 · 실행 자원을 정리하고 있습니다.'); });
