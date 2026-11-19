@@ -11,3 +11,13 @@ venv/
 htmlcov/
 .pytest_cache/
 pts-out/
+
+# Tablet app: generated assets, models, and private configuration
+apps/tablet/node_modules/
+apps/tablet/public/runtime/
+apps/tablet/.env
+apps/tablet/.env.*.local
+apps/tablet/test-results/
+*.litertlm
+*.task
+*.wasm
