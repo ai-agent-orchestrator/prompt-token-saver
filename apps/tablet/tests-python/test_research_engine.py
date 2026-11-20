@@ -96,7 +96,12 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(report["fallback_rate"], 1)
 
     def test_reference_restores_predecessor_in_source_order(self):
-        result = run("기반을 정비합니다.\n이를 위해 Docker를 도입합니다.", cfg=EngineConfig(max_sentences=1))
+        # Isolate reference repair from near-equal floating-point TF-IDF ranks,
+        # which differ between Python runtimes. Select the reference explicitly.
+        result = run("기반을 정비합니다.\n이를 위해 Docker를 도입합니다.", query="도입",
+                     cfg=EngineConfig(max_sentences=1),
+                     embed_fn=lambda texts: [[0, 1], [1, 0], [1, 0]],
+                     surprisal_fn=lambda texts: [1, 1])
         self.assertEqual(result.selected_ids, [0, 1])
         self.assertIn("context_repair", result.sentences[0].reasons)
 
