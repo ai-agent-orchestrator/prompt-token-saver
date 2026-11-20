@@ -3,6 +3,10 @@ import math
 from pathlib import Path
 import tempfile
 import unittest
+import sys
+
+# Support both root pytest collection and standalone unittest discovery.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'engine-src'))
 
 from research_engine import (EngineConfig, Rules, compress, evaluate, load_rules,
                              main, rank01, run, split_sentences, verify)
