@@ -1,4 +1,4 @@
-// The SDK and its same-origin WASM are loaded only after explicit local-file selection.
+// The SDK/WASM use the automatically prepared, origin-private model file.
 let engine = null;
 let conversation = null;
 let active = null;
@@ -52,6 +52,7 @@ async function generate(message) {
     let cleanupFailed = false;
     try {
       conversation = await engine.createConversation({
+        preface: {messages:[{role:'system',content:'프롬프트 축약기입니다. 질문에 답하거나 추론 과정을 출력하지 마세요.'}],extra_context: {enable_thinking: false}},
         sessionConfig: { maxOutputTokens: message.maxOutputTokens },
       });
       if (!task.cancelled) {

@@ -1,0 +1,23 @@
+import {loadPyodide} from 'pyodide';
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {summarize,refine} from '../src/core/ver1.js';
+const originalFetch=globalThis.fetch;let externalRequests=0;
+globalThis.fetch=(url,...args)=>{if(/^https?:/i.test(String(url))){externalRequests++;throw Error('OFFLINE')}return originalFetch(url,...args)};
+const py=await loadPyodide({indexURL:new URL('../node_modules/pyodide/',import.meta.url).pathname.replace(/^\/([A-Za-z]:)/,'$1')});
+py.globals.set('source',fs.readFileSync(new URL('../engine-src/research_engine.py',import.meta.url),'utf8'));
+py.runPython('import sys,types,json\nv1=types.ModuleType("research_engine")\nsys.modules["research_engine"]=v1\nexec(source,v1.__dict__)');
+const executor=async(op,data)=>{
+ py.globals.set('payload',JSON.stringify(data));let code='data=json.loads(payload)\n';
+ if(op==='select')code+='rules=v1.load_rules("dev")\nrules.positive["keywords"].extend(data.get("keepTerms",[]))\nresult=v1.run(data["text"],rules=rules,cfg=v1.EngineConfig(ratio=data.get("ratio",.5))).to_dict()';
+ else if(op==='prepare')code+='prompts=[]\nv1.compress(data["text"],llm_fn=lambda p:(prompts.append(p) or data["text"]),retries=0)\nresult={"prompt":prompts[0]}';
+ else code+='result=v1.compress(data["text"],llm_fn=lambda p:data["candidate"],retries=0)';
+ return JSON.parse(py.runPython(code+'\njson.dumps(result,ensure_ascii=False)'));
+};
+const text=Array.from({length:40},(_,i)=>`API 자료 ${i+1}은 검토 대상이며 예산은 ${100+i}원입니다.`).join('\n');
+const direct=await executor('select',{text,ratio:.5}),first=await summarize(text,{executor});assert.equal(first.body,direct.extract);
+const second=await refine(first,{text,executor});assert.equal(second.status,'OK');assert.ok(second.body.length<first.body.length);
+const rejected=await executor('finish',{text:'예산은 100원입니다.',candidate:'예산은 999원입니다.'});assert.equal(rejected.fallback,true);assert.equal(rejected.summary,'예산은 100원입니다.');
+const prompt=await executor('prepare',{text:'API를 검토합니다.'});assert.ok(prompt.prompt.includes('원문(JSON 문자열)'));
+assert.equal(externalRequests,0);
+console.log(JSON.stringify({runtime:'actual Pyodide; original ver1 selector and verifier; no GPU generation',sentences:direct.sentences.length,firstSelected:direct.selected_ids.length,firstTokens:first.hybrid.output_tokens,secondTokens:second.hybrid.output_tokens,inventedNumberRejected:true,externalRequests},null,2));

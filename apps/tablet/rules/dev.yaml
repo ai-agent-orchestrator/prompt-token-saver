@@ -1,0 +1,12 @@
+{
+  "profile": "dev",
+  "positive": {
+    "keywords": ["Docker", "PostgreSQL", "MySQL", "API", "Kubernetes", "가드레일", "마이그레이션", "오토스케일링", "Prometheus", "Grafana"],
+    "patterns": []
+  },
+  "negative_extra": [],
+  "negative_disable": [],
+  "structure": {"min_per_section": 1},
+  "max_forced_ratio": 0.5,
+  "output_template": "[시기/단계] - [핵심 대상] - [실행 내용]"
+}

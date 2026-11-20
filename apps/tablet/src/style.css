@@ -142,3 +142,19 @@ h2 { font-size: 16px; }
 h1 .lumi-link-label { display: block; max-width: 125px; color: #d2bee9; font-size: 12px; font-weight: 500; line-height: 1.5; letter-spacing: 0; }
 .lumi-link:hover .lumi-link-label { color: #ffe587; text-decoration: underline; }
 @media (max-width:760px) { .lumi-link { margin-left: 8px; gap: 4px; } .lumi-link .lumi { width: 52px; height: 59px; } h1 .lumi-link-label { max-width: 105px; font-size: 11px; } }
+:root .engine-panel{margin:0 0 18px;padding:16px;border:1px solid var(--line);border-radius:8px;background:var(--panel,#fff);color:var(--text,#263738)}
+.todo-pane { border:2px solid #e5ff00; box-shadow:0 0 0 1px #e5ff0040,0 0 24px #e5ff0026; }
+.todo-pane:focus-within { border-color:#edff5a; box-shadow:0 0 0 2px #e5ff0060,0 0 28px #e5ff0033; }
+.todo-pane .pane-heading { background:#242b12; border-bottom-color:#e5ff0080; }
+.todo-pane h2 { display:flex; align-items:center; gap:9px; color:#e5ff00; }
+.todo-lumi { width:38px; height:44px; object-fit:contain; }
+.todo-pane .pane-heading button { border-color:#e5ff00; color:#e5ff00; background:#242b12; }
+.research-section { margin:22px 0; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--panel); }
+.research-section details { padding:12px 0; border-top:1px solid var(--line); }
+.research-section summary { cursor:pointer; min-height:44px; padding:10px 0; }
+.research-section textarea { width:100%; min-height:170px; padding:14px; background:#0b1521; color:#e3edf7; border:1px solid var(--line); font-size:16px; line-height:1.7; }
+.research-item { padding:12px 0; border-bottom:1px solid var(--line); overflow-wrap:anywhere; white-space:pre-wrap; }
+.research-item p { margin:8px 0; line-height:1.7; }
+.research-item button { margin:4px 0; }
+.research-section .saved-heading { flex-wrap:wrap; gap:12px; }
+.engine-panel h2{margin:0 0 10px}.engine-panel label{display:block;margin:10px 0 6px;font-size:14px}.engine-panel select,.engine-panel input:not([type=file]){width:100%;max-width:560px}.engine-panel button{margin:10px 0}.engine-panel .help{font-size:14px}.engine-panel input[type=file]{max-width:100%}
