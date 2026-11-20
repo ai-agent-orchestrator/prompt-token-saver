@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {summarize,refine,modelPieces} from '../src/core/ver1.js';
+import {outboundSummary} from '../src/core/summary/output.js';
+const executor=async(op,data)=>op==='select'?{extract:data.ratio===.3?'핵심 내용':'핵심 내용과 부가 설명',selected_ids:[0],sentences:[{id:0,text:'핵심 내용'}],warnings:[]}:op==='prepare'?{prompt:'원문 데이터'}:{fallback:false,summary:data.candidate};
+test('public adapter uses ver1 selection and leaves metrics out of clipboard/Drive',async()=>{const r=await summarize('핵심 내용과 여러 부가 설명입니다.',{executor});assert.equal(r.report.engine.version,'research-ver1');assert.equal(outboundSummary(r,[],false).text,r.body);assert.equal(r.hybrid.model_attempts,0)});
+test('second pane refines the same original with the ver1 selector',async()=>{const text='핵심 내용과 여러 부가 설명입니다.',first=await summarize(text,{executor}),second=await refine(first,{text,executor});assert.equal(second.status,'OK');assert.equal(second.stage,2);assert.ok(second.body.length<first.body.length);assert.equal(second.sourceHash,first.sourceHash)});
+test('changed source cannot reuse first-stage evidence',async()=>{const first=await summarize('원문',{executor}),second=await refine(first,{text:'변경',executor});assert.equal(second.status,'FAILED');assert.equal(second.body,'')});
+test('invalid model output falls back to ver1 extraction',async()=>{const r=await summarize('원문',{executor:async(op,data)=>op==='finish'?{fallback:true,summary:data.text}:executor(op,data),generator:{generate:async()=> '지어낸 내용'}});assert.equal(r.body,'핵심 내용과 부가 설명');assert.equal(r.hybrid.modelFallback,true)});
+test('model pieces preserve exact selected text when joined',()=>{const text='줄입니다.\n'.repeat(1000);assert.equal(modelPieces(text).join('\n'),text)});
+test('abort never returns a successful partial result',async()=>{const c=new AbortController();c.abort();await assert.rejects(summarize('원문',{executor,signal:c.signal}),{name:'AbortError'})});
+test('public product does not include the improved selector or todo implementation',()=>{assert.equal(fs.existsSync(new URL('../engine-src/hybrid_engine.py',import.meta.url)),false);assert.equal(fs.existsSync(new URL('../engine-src/merge_guard.py',import.meta.url)),false);assert.equal(fs.existsSync(new URL('../src/research/workspace.js',import.meta.url)),false);const main=fs.readFileSync(new URL('../src/main.js',import.meta.url),'utf8');assert.match(main,/from '.\/core\/ver1.js'/);assert.doesNotMatch(main,/2 do list|todo-pane/)});

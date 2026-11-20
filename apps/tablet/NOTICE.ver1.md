@@ -1,0 +1,1 @@
+Original ver1 selector: ai-agent-orchestrator, research_engine.py. Shared UI: prompt-token-saver, MIT (LICENSE.upstream). LiteRT-LM 0.19.0: Apache-2.0; Pyodide 0.27.7: MPL-2.0; js-tiktoken 1.0.21: MIT. Full notices are retained in licenses/ and generated runtime assets. Model weights are downloaded separately and are not committed.

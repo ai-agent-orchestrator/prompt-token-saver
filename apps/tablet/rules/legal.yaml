@@ -1,0 +1,12 @@
+{
+  "profile": "legal",
+  "positive": {
+    "keywords": ["원고", "피고", "판결", "청구", "손해배상"],
+    "patterns": ["제\\s*\\d+\\s*조(?:\\s*제\\s*\\d+\\s*항)?", "\\d{2,4}[가-힣]{1,3}\\d{2,}"]
+  },
+  "negative_extra": [],
+  "negative_disable": [],
+  "structure": {"min_per_section": 1},
+  "max_forced_ratio": 0.5,
+  "output_template": "[조문/사건] - [쟁점] - [판단]"
+}

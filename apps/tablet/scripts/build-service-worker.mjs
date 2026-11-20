@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 const root = path.resolve(import.meta.dirname, '../dist');
+await fs.writeFile(path.join(root,'BUILD_INFO.json'),JSON.stringify({edition:'public-ver1',engineVersion:'research-ver1',secondPane:'summary-2',sourceCommit:process.env.GITHUB_SHA||'local',builtAt:new Date().toISOString()},null,2));
 const paths = [];
 async function walk(directory) {
   for (const entry of await fs.readdir(directory, { withFileTypes: true })) {

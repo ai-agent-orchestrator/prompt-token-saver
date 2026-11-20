@@ -1,0 +1,9 @@
+{
+  "profile": "life",
+  "positive": {"keywords": [], "patterns": []},
+  "negative_extra": [],
+  "negative_disable": ["meal", "aside"],
+  "structure": {"min_per_section": 1},
+  "max_forced_ratio": 0.5,
+  "output_template": "[날짜] - [사건] - [할 일]"
+}

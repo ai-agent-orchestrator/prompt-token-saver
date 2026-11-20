@@ -6,6 +6,12 @@ import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
+await cp(path.join(projectRoot, 'node_modules/pyodide'), path.join(projectRoot, 'public/python'), {recursive:true});
+await mkdir(path.join(projectRoot,'public/engine'),{recursive:true});
+await cp(path.join(projectRoot,'engine-src/research_engine.py'),path.join(projectRoot,'public/engine/research_engine.py'));
+await cp(path.join(projectRoot,'licenses/LICENSE-Pyodide.txt'),path.join(projectRoot,'public/python/LICENSE.txt'));
+await cp(path.join(projectRoot,'licenses/LICENSE-js-tiktoken.txt'),path.join(projectRoot,'public/engine/LICENSE-js-tiktoken.txt'));
+await cp(path.join(projectRoot,'LICENSE.upstream'),path.join(projectRoot,'public/engine/LICENSE-upstream.txt'));
 const packageRoot = path.dirname(fileURLToPath(import.meta.resolve('@litert-lm/core/package.json')));
 const packageInfo = JSON.parse(await readFile(path.join(packageRoot, 'package.json'), 'utf8'));
 if (packageInfo.version !== '0.19.0') throw new Error('LiteRT-LM must match the pinned 0.19.0 runtime.');

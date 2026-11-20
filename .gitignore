@@ -27,3 +27,6 @@ spec/fixtures/private/
 docs/review/ontology-source.txt
 docs/review/user-first-result.txt
 docs/review/reproduced-*.txt
+
+apps/tablet/public/python/
+apps/tablet/public/engine/
